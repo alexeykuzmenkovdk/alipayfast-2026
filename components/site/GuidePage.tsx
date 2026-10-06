@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { TgIcon } from './shared'
 
 export function TbankGuidePage() {
@@ -11,8 +12,13 @@ export function TbankGuidePage() {
           <Link href="/#top" className="gp-back">
             ← Вернуться на главную
           </Link>
-          <h1>Как перевести деньги через Т-Банк</h1>
-          <p className="gp-sub">Подробная инструкция для пополнения Alipay</p>
+          <div className="gp-hero-content">
+            <div>
+              <h1>Как перевести деньги через Т-Банк</h1>
+              <p className="gp-sub">Подробная инструкция для пополнения Alipay. Пошагово, со скриншотами, на русском.</p>
+            </div>
+            <div className="gp-hero-icon">💳</div>
+          </div>
         </div>
       </section>
 
@@ -171,6 +177,15 @@ export function TbankGuidePage() {
                         <li>Вставьте электронную почту которую вам предоставили</li>
                         <li>Нажмите "Готово"</li>
                       </ol>
+                      <div className="gp-screenshot">
+                        <Image 
+                          src="/assets/guide-alipay.jpg" 
+                          alt="Инструкция для iPhone" 
+                          width={400} 
+                          height={600}
+                          className="gp-screenshot-img"
+                        />
+                      </div>
                     </div>
 
                     <div className="gp-tab">
@@ -184,6 +199,15 @@ export function TbankGuidePage() {
                         <li>Вставьте электронную почту которую вам предоставили</li>
                         <li>Нажмите "Готово"</li>
                       </ol>
+                      <div className="gp-screenshot">
+                        <Image 
+                          src="/assets/guide-poizon.png" 
+                          alt="Инструкция для Android" 
+                          width={400} 
+                          height={600}
+                          className="gp-screenshot-img"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -207,16 +231,43 @@ export function TbankGuidePage() {
                     <div className="gp-substep">
                       <h4>Шаг 5.1: Найдите раздел "Оплатить и получить"</h4>
                       <p>На главной странице Alipay нажмите на кнопку "Оплатить и получить"</p>
+                      <div className="gp-screenshot gp-screenshot-sm">
+                        <Image 
+                          src="/assets/guide-alipay-en.jpg" 
+                          alt="Шаг 5.1" 
+                          width={360} 
+                          height={280}
+                          className="gp-screenshot-img"
+                        />
+                      </div>
                     </div>
 
                     <div className="gp-substep">
                       <h4>Шаг 5.2: Выберите "Прием платежей"</h4>
                       <p>В открывшемся меню выберите "Прием платежей"</p>
+                      <div className="gp-screenshot gp-screenshot-sm">
+                        <Image 
+                          src="/assets/guide-alipay-en.jpg" 
+                          alt="Шаг 5.2" 
+                          width={360} 
+                          height={280}
+                          className="gp-screenshot-img"
+                        />
+                      </div>
                     </div>
 
                     <div className="gp-substep">
                       <h4>Шаг 5.3: Сохраните QR-код</h4>
                       <p>Ваш личный QR-код для получения платежей. Нажмите "Сохранить изображение"</p>
+                      <div className="gp-screenshot gp-screenshot-sm">
+                        <Image 
+                          src="/assets/guide-alipay-en.jpg" 
+                          alt="Шаг 5.3" 
+                          width={360} 
+                          height={280}
+                          className="gp-screenshot-img"
+                        />
+                      </div>
                     </div>
                   </div>
 
