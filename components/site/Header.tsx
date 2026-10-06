@@ -17,7 +17,7 @@ export const NAV = [
 ]
 
 export const GUIDES = [
-  { tag: 'Alipay', t: 'Как установить и верифицировать Alipay', m: '8 мин', img: '/assets/guide-alipay-en.jpg', href: '/materials' },
+  { tag: 'Alipay', t: 'Как установить, верифицировать и пользоваться Alipay', m: '12 мин', img: '/assets/alipay-guide/cover.jpg', href: '/guides/alipay' },
   { tag: 'Poizon', t: 'Оплата на Poizon через Alipay: пошагово', m: '6 мин', img: '/assets/guide-poizon.png', href: '/materials' },
   { tag: 'Т-Банк', t: 'Как перевести деньги через Т-Банк', m: '3 мин', img: '/assets/guide-alipay.jpg', href: '/guides/tbank' },
 ]

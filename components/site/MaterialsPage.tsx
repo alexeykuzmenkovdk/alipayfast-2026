@@ -24,12 +24,12 @@ interface Post {
 const POSTS: Post[] = [
   {
     c: 'Alipay',
-    t: 'Как установить и верифицировать Alipay',
-    d: 'Регистрация по российскому номеру, привязка паспорта, первые настройки.',
-    m: '8 мин',
+    t: 'Как установить, верифицировать и пользоваться Alipay',
+    d: 'Регистрация по российскому номеру, привязка загранпаспорта, переводы, лимиты и вывод средств.',
+    m: '12 мин',
     date: '02.10.2026',
-    img: '/assets/guide-alipay-en.jpg',
-    href: '/materials',
+    img: '/assets/alipay-guide/cover.jpg',
+    href: '/guides/alipay',
   },
   {
     c: 'Poizon',
