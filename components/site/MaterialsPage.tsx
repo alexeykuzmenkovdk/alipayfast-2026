@@ -1,0 +1,202 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Header, MobileMenu } from './Header'
+import { TelegramSection, TgFloat } from './Telegram'
+import { Footer } from './Footer'
+import { useReveal } from './shared'
+
+const CATS = ['Все', 'Alipay', 'Poizon', 'Taobao', 'Т-Банк', 'Поездки в Китай']
+
+interface Post {
+  c: string
+  t: string
+  d: string
+  m: string
+  date: string
+  img?: string
+  ph?: string
+}
+
+const POSTS: Post[] = [
+  {
+    c: 'Alipay',
+    t: 'Как установить и верифицировать Alipay',
+    d: 'Регистрация по российскому номеру, привязка паспорта, первые настройки.',
+    m: '8 мин',
+    date: '02.10.2026',
+    img: '/assets/guide-alipay-en.jpg',
+  },
+  {
+    c: 'Poizon',
+    t: 'Оплата на Poizon через Alipay',
+    d: 'От корзины до экрана оплаты — 23 скриншота с пояснениями.',
+    m: '6 мин',
+    date: '28.09.2026',
+    img: '/assets/guide-poizon.png',
+  },
+  {
+    c: 'Т-Банк',
+    t: 'Перевод через Т-Банк: без ошибок',
+    d: 'Почему только Т-Банк и как правильно оформить перевод.',
+    m: '3 мин',
+    date: '21.09.2026',
+    img: '/assets/guide-alipay.jpg',
+  },
+  {
+    c: 'Alipay',
+    t: 'Китайский интерфейс Alipay: шпаргалка',
+    d: 'Главные кнопки и разделы, если приложение переключилось на китайский.',
+    m: '4 мин',
+    date: '14.09.2026',
+    ph: '支',
+  },
+  {
+    c: 'Taobao',
+    t: 'Taobao: как найти продавца и не переплатить',
+    d: 'Поиск по фото, рейтинги магазинов, торг в чате.',
+    m: '7 мин',
+    date: '07.09.2026',
+    ph: '淘',
+  },
+  {
+    c: 'Поездки в Китай',
+    t: 'Харбин и Суйфэньхэ: платим Alipay на месте',
+    d: 'QR-оплата в такси, отелях и на рынках.',
+    m: '5 мин',
+    date: '30.08.2026',
+    ph: '¥',
+  },
+]
+
+export function MaterialsPage() {
+  const [menu, setMenu] = useState(false)
+  const [cat, setCat] = useState('Все')
+  const [q, setQ] = useState('')
+  useReveal()
+
+  useEffect(() => {
+    document.body.style.overflow = menu ? 'hidden' : ''
+  }, [menu])
+
+  const list = POSTS.filter(
+    (p) => (cat === 'Все' || p.c === cat) && (p.t + p.d).toLowerCase().includes(q.toLowerCase()),
+  )
+  const [feat, ...rest] = list
+  const cnt = (c: string) => (c === 'Все' ? POSTS.length : POSTS.filter((p) => p.c === c).length)
+
+  return (
+    <>
+      <Header onMenu={() => setMenu(true)} page="materials" />
+      <MobileMenu open={menu} onClose={() => setMenu(false)} page="materials" />
+      <section className="mt-hero">
+        <div className="wrap">
+          <div className="mt-crumb">
+            <Link href="/">Главная</Link> / Полезные материалы
+          </div>
+          <h1 className="disp mt-h">
+            Полезные
+            <br />
+            <span className="red">материалы</span>
+          </h1>
+          <div className="mt-sub">
+            <p>Инструкции по Alipay, Poizon, Taobao и поездкам в Китай. Пошагово, со скриншотами, на русском.</p>
+            <label className="mt-search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Найти инструкцию" />
+            </label>
+          </div>
+        </div>
+      </section>
+      <div className="wrap">
+        <div className="mt-filters">
+          {CATS.map((c) => (
+            <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>
+              {c}
+              <sup>{cnt(c)}</sup>
+            </button>
+          ))}
+        </div>
+        {feat && (
+          <article className="mt-feat">
+            <div className="mt-feat-img">
+              {feat.img ? (
+                <Image src={feat.img} alt="" width={600} height={420} />
+              ) : (
+                <div
+                  className="ph"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontFamily: 'var(--display)',
+                    fontSize: 180,
+                    color: '#fff',
+                  }}
+                >
+                  {feat.ph}
+                </div>
+              )}
+            </div>
+            <div>
+              <span className="mt-tag">Новое · {feat.c}</span>
+              <h2>{feat.t}</h2>
+              <p>{feat.d}</p>
+              <div className="mt-meta">
+                <span>{feat.date}</span>
+                <span>Читать {feat.m}</span>
+              </div>
+              <a className="btn btn-red" href="https://t.me/alipayfast" target="_blank">
+                Читать инструкцию →
+              </a>
+            </div>
+          </article>
+        )}
+        <div className="mt-grid">
+          {!list.length && (
+            <div className="mt-empty">
+              Ничего не нашлось. Напишите нам в{' '}
+              <a href="https://t.me/alipayfast" target="_blank" className="red">
+                Telegram
+              </a>{' '}
+              — подскажем.
+            </div>
+          )}
+          {rest.map((p) => (
+            <article className="mt-card reveal" key={p.t}>
+              <div className="mt-card-img">
+                {p.img ? <Image src={p.img} alt="" width={480} height={360} /> : <div className="ph">{p.ph}</div>}
+                <span className="num">{p.c}</span>
+              </div>
+              <h3>{p.t}</h3>
+              <p>{p.d}</p>
+              <div className="ft2">
+                <span>{p.date}</span>
+                <span>{p.m}</span>
+              </div>
+            </article>
+          ))}
+          {list.length > 0 && (
+            <div className="mt-soon">
+              <span className="mt-tag">Скоро</span>
+              <b>Нужна инструкция, которой нет?</b>
+              <span>Напишите тему — сделаем гайд и опубликуем в канале.</span>
+              <a className="btn btn-line btn-sm" href="https://t.me/alipayfast" target="_blank">
+                Предложить тему
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+      <TelegramSection />
+      <Footer />
+      <TgFloat />
+    </>
+  )
+}
