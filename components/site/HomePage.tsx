@@ -7,6 +7,7 @@ import { CalcSection } from './Sections'
 import { RatesSection } from './RateChart'
 import { Why, How, Platforms, Services, Office, Reviews, Faq, Contact } from './Sections'
 import { TelegramSection, TgFloat } from './Telegram'
+import { TbankPromo } from './TbankPromo'
 import { Footer, MobileBar } from './Footer'
 import { OrderModal } from './OrderModal'
 import { useReveal } from './shared'
@@ -34,6 +35,7 @@ export function HomePage() {
       <How />
       <Platforms />
       <Services />
+      <TbankPromo />
       <TelegramSection />
       <Office />
       <Reviews />

@@ -179,7 +179,7 @@ export function TbankGuidePage() {
                       </ol>
                       <div className="gp-screenshot">
                         <Image 
-                          src="/assets/guide-alipay.jpg" 
+                          src="/assets/tbank-step1.svg" 
                           alt="Инструкция для iPhone" 
                           width={400} 
                           height={600}
@@ -201,7 +201,7 @@ export function TbankGuidePage() {
                       </ol>
                       <div className="gp-screenshot">
                         <Image 
-                          src="/assets/guide-poizon.png" 
+                          src="/assets/tbank-step2.svg" 
                           alt="Инструкция для Android" 
                           width={400} 
                           height={600}
@@ -233,7 +233,7 @@ export function TbankGuidePage() {
                       <p>На главной странице Alipay нажмите на кнопку "Оплатить и получить"</p>
                       <div className="gp-screenshot gp-screenshot-sm">
                         <Image 
-                          src="/assets/guide-alipay-en.jpg" 
+                          src="/assets/tbank-step1.svg" 
                           alt="Шаг 5.1" 
                           width={360} 
                           height={280}
@@ -247,7 +247,7 @@ export function TbankGuidePage() {
                       <p>В открывшемся меню выберите "Прием платежей"</p>
                       <div className="gp-screenshot gp-screenshot-sm">
                         <Image 
-                          src="/assets/guide-alipay-en.jpg" 
+                          src="/assets/tbank-step2.svg" 
                           alt="Шаг 5.2" 
                           width={360} 
                           height={280}
@@ -261,7 +261,7 @@ export function TbankGuidePage() {
                       <p>Ваш личный QR-код для получения платежей. Нажмите "Сохранить изображение"</p>
                       <div className="gp-screenshot gp-screenshot-sm">
                         <Image 
-                          src="/assets/guide-alipay-en.jpg" 
+                          src="/assets/tbank-step1.svg" 
                           alt="Шаг 5.3" 
                           width={360} 
                           height={280}
