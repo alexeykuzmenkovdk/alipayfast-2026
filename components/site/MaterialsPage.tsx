@@ -18,6 +18,7 @@ interface Post {
   date: string
   img?: string
   ph?: string
+  href?: string
 }
 
 const POSTS: Post[] = [
@@ -28,6 +29,7 @@ const POSTS: Post[] = [
     m: '8 мин',
     date: '02.10.2026',
     img: '/assets/guide-alipay-en.jpg',
+    href: '/materials',
   },
   {
     c: 'Poizon',
@@ -36,6 +38,7 @@ const POSTS: Post[] = [
     m: '6 мин',
     date: '28.09.2026',
     img: '/assets/guide-poizon.png',
+    href: '/materials',
   },
   {
     c: 'Т-Банк',
@@ -44,6 +47,7 @@ const POSTS: Post[] = [
     m: '3 мин',
     date: '21.09.2026',
     img: '/assets/guide-alipay.jpg',
+    href: '/guides/tbank',
   },
   {
     c: 'Alipay',
@@ -52,6 +56,7 @@ const POSTS: Post[] = [
     m: '4 мин',
     date: '14.09.2026',
     ph: '支',
+    href: '/materials',
   },
   {
     c: 'Taobao',
@@ -60,6 +65,7 @@ const POSTS: Post[] = [
     m: '7 мин',
     date: '07.09.2026',
     ph: '淘',
+    href: '/materials',
   },
   {
     c: 'Поездки в Китай',
@@ -68,6 +74,7 @@ const POSTS: Post[] = [
     m: '5 мин',
     date: '30.08.2026',
     ph: '¥',
+    href: '/materials',
   },
 ]
 
@@ -152,9 +159,9 @@ export function MaterialsPage() {
                 <span>{feat.date}</span>
                 <span>Читать {feat.m}</span>
               </div>
-              <a className="btn btn-red" href="https://t.me/alipayfast" target="_blank">
-                Читать инструкцию →
-              </a>
+               <Link className="btn btn-red" href={feat.href || '/materials'}>
+                 Читать инструкцию →
+               </Link>
             </div>
           </article>
         )}

@@ -17,9 +17,9 @@ export const NAV = [
 ]
 
 export const GUIDES = [
-  { tag: 'Alipay', t: 'Как установить и верифицировать Alipay', m: '8 мин', img: '/assets/guide-alipay-en.jpg' },
-  { tag: 'Poizon', t: 'Оплата на Poizon через Alipay: пошагово', m: '6 мин', img: '/assets/guide-poizon.png' },
-  { tag: 'Т-Банк', t: 'Как перевести деньги через Т-Банк', m: '3 мин', img: '/assets/guide-alipay.jpg' },
+  { tag: 'Alipay', t: 'Как установить и верифицировать Alipay', m: '8 мин', img: '/assets/guide-alipay-en.jpg', href: '/materials' },
+  { tag: 'Poizon', t: 'Оплата на Poizon через Alipay: пошагово', m: '6 мин', img: '/assets/guide-poizon.png', href: '/materials' },
+  { tag: 'Т-Банк', t: 'Как перевести деньги через Т-Банк', m: '3 мин', img: '/assets/guide-alipay.jpg', href: '/guides/tbank' },
 ]
 
 const MAT_URL = '/materials'
@@ -118,18 +118,18 @@ export function Header({ onMenu, page = 'home' }: { onMenu: () => void; page?: '
                   <Link href={MAT_URL}>Все материалы →</Link>
                 </div>
                 <div className="md-g">
-                  {GUIDES.map((g, i) => (
-                    <Link key={i} href={MAT_URL} className="md-c">
-                      <div className="md-img">
-                        <Image src={g.img} alt="" width={320} height={200} />
-                      </div>
-                      <span className="md-tag">
-                        {g.tag} · {g.m}
-                      </span>
-                      <b>{g.t}</b>
-                    </Link>
-                  ))}
-                </div>
+                   {GUIDES.map((g, i) => (
+                     <Link key={i} href={g.href} className="md-c">
+                       <div className="md-img">
+                         <Image src={g.img} alt="" width={320} height={200} />
+                       </div>
+                       <span className="md-tag">
+                         {g.tag} · {g.m}
+                       </span>
+                       <b>{g.t}</b>
+                     </Link>
+                   ))}
+                 </div>
               </div>
             </div>
           </nav>
