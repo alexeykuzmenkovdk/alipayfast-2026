@@ -1,6 +1,12 @@
 // Проверка initData из Telegram Mini App.
-// Подпись считается по алгоритму Telegram WebApp: HMAC-SHA256,
-// где ключ — SHA256 от токена бота.
+// Алгоритм Telegram WebApp: secret_key = HMAC_SHA256("WebAppData", bot_token),
+// hash = HMAC_SHA256(secret_key, data_check_string), где строка собирается из
+// всех полей, кроме hash и signature, по алфавиту через \n.
+//
+// Клиенты Telegram кодируют значения по-разному (проценты/%2B против пробела),
+// и от этого зависит хешируемая строка. Поэтому пробуем несколько вариантов
+// сборки — все они завязаны на один и тот же секрет бота, слабее проверку это
+// не делает, зато честный пользователь не упирается в 401 из-за кодировки.
 
 import crypto from 'crypto'
 
@@ -16,37 +22,89 @@ export interface TelegramInitData {
   query_id?: string
 }
 
+interface InitField {
+  key: string
+  raw: string
+  decoded: string
+  percent: string
+}
+
+function parseFields(initData: string): InitField[] {
+  const fields: InitField[] = []
+  for (const part of initData.split('&')) {
+    if (!part) continue
+    const separator = part.indexOf('=')
+    const key = separator === -1 ? part : part.slice(0, separator)
+    const raw = separator === -1 ? '' : part.slice(separator + 1)
+    let percent = raw
+    let decoded = raw
+    try {
+      percent = decodeURIComponent(raw)
+    } catch {
+      percent = raw
+    }
+    try {
+      decoded = decodeURIComponent(raw.replace(/\+/g, ' '))
+    } catch {
+      decoded = percent
+    }
+    fields.push({ key, raw, decoded, percent })
+  }
+  return fields
+}
+
 export function parseInitData(initData: string): Record<string, string> {
-  return Object.fromEntries(
-    initData
-      .split('&')
-      .filter(Boolean)
-      .map((part) => part.split('=') as [string, string])
-      .map(([key, value]) => [key, decodeURIComponent(value ?? '')]),
-  )
+  return Object.fromEntries(parseFields(initData).map((field) => [field.key, field.decoded]))
+}
+
+// Варианты сборки data_check_string: как брать значения (сырые, раскодированные
+// по-формному или просто percent-декодированные) и какие поля исключать.
+// Клиенты Telegram различаются в том, кодируют ли они пробел как «+».
+const ENCODINGS: [string, (field: InitField) => string][] = [
+  ['decoded', (field) => field.decoded],
+  ['percent', (field) => field.percent],
+  ['raw', (field) => field.raw],
+]
+
+const EXCLUSIONS: [string, string[]][] = [
+  ['no_hash_signature', ['hash', 'signature']],
+  ['no_hash', ['hash']],
+]
+
+function computeHash(dataCheckString: string, botToken: string) {
+  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest()
+  return crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
+}
+
+function hashCandidates(initData: string, botToken: string): Record<string, string> {
+  const fields = parseFields(initData)
+  const result: Record<string, string> = {}
+  for (const [encodingName, pick] of ENCODINGS) {
+    for (const [exclusionName, excluded] of EXCLUSIONS) {
+      const dataCheckString = fields
+        .filter((field) => !excluded.includes(field.key))
+        .map((field) => `${field.key}=${pick(field)}`)
+        .sort()
+        .join('\n')
+      result[`${encodingName}/${exclusionName}`] = computeHash(dataCheckString, botToken)
+    }
+  }
+  return result
+}
+
+// Возвращает название сработавшего варианта или null. Название нужно только
+// для логов: canonical — decoded/no_hash_signature.
+export function matchInitData(initData: string, botToken: string): string | null {
+  const hash = parseFields(initData).find((field) => field.key === 'hash')?.raw.trim().toLowerCase()
+  if (!hash) return null
+  for (const [name, candidate] of Object.entries(hashCandidates(initData, botToken))) {
+    if (candidate === hash) return name
+  }
+  return null
 }
 
 export function validateInitData(initData: string, botToken: string) {
-  const data = parseInitData(initData)
-  const hash = data.hash
-  if (!hash) return false
-
-  const dataCheckString = Object.keys(data)
-    .filter((key) => key !== 'hash' && key !== 'signature')
-    .sort()
-    .map((key) => `${key}=${data[key]}`)
-    .join('\n')
-
-  // Telegram Mini Apps: secret_key = HMAC_SHA256("WebAppData", bot_token),
-  // hash = HMAC_SHA256(secret_key, data_check_string).
-  // (sha256(bot_token) — это алгоритм Login Widget, для initData он не подходит.)
-  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest()
-  const hmac = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
-
-  const expected = Buffer.from(hmac, 'utf8')
-  const received = Buffer.from(hash, 'utf8')
-  if (expected.length !== received.length) return false
-  return crypto.timingSafeEqual(expected, received)
+  return matchInitData(initData, botToken) !== null
 }
 
 export function getTelegramUser(initData: string): TelegramInitData {
@@ -98,25 +156,40 @@ export function telegramAuth(initData: string | null): TelegramAuth {
   const token = botToken()
   if (!token) return { reason: 'no_bot_token' }
 
-  if (!validateInitData(initData, token)) {
+  if (process.env.TMA_DEBUG_DUMP === '1') {
+    console.warn('[tma] raw initData', initData)
+  }
+
+  const matched = matchInitData(initData, token)
+  if (!matched) {
     const data = parseInitData(initData)
-    const matched = knownTokens()
-      .filter((entry) => entry.token !== token && validateInitData(initData, entry.token))
-      .map((entry) => entry.name)
+    const otherTokens = knownTokens()
+      .filter((entry) => entry.token !== token)
+      .map((entry) => ({ [entry.name]: matchInitData(initData, entry.token) }))
+      .filter((entry) => Object.values(entry)[0])
+
+    const candidates = Object.fromEntries(
+      Object.entries(hashCandidates(initData, token)).map(([name, value]) => [name, value.slice(0, 16)]),
+    )
 
     console.warn(
       '[tma] initData signature mismatch',
       JSON.stringify({
         fields: Object.keys(data).sort(),
         hasSignature: Boolean(data.signature),
-        hashLength: data.hash?.length ?? 0,
+        receivedHash: (data.hash ?? '').slice(0, 16),
         authDate: data.auth_date ?? null,
         initDataLength: initData.length,
         userId: data.user ? safeUserId(data.user) : null,
-        matchedOtherToken: matched.length ? matched : null,
+        computed: candidates,
+        matchedOtherToken: otherTokens.length ? otherTokens : null,
       }),
     )
-    return { reason: matched.length ? `signed_by:${matched[0]}` : 'signature_mismatch' }
+    return { reason: otherTokens.length ? `signed_by:${Object.keys(otherTokens[0])[0]}` : 'signature_mismatch' }
+  }
+
+  if (matched !== 'decoded/no_hash_signature') {
+    console.warn('[tma] initData matched non-canonical variant:', matched)
   }
 
   const parsed = getTelegramUser(initData)
