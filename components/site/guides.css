@@ -540,6 +540,72 @@
   color: var(--red);
 }
 
+/* Comparison table */
+.gp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  margin: 8px 0;
+}
+
+.gp-table th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 60%, transparent);
+  padding: 10px 14px;
+  border-bottom: 2px solid color-mix(in oklab, var(--ink) 14%, transparent);
+}
+
+.gp-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
+  color: color-mix(in oklab, var(--ink) 78%, transparent);
+  line-height: 1.5;
+  vertical-align: top;
+}
+
+.gp-table td:first-child {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.gp-table tr:hover td {
+  background: color-mix(in oklab, var(--ink) 3%, transparent);
+}
+
+.gp-table .yes {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.gp-table .no {
+  color: #c62828;
+  font-weight: 600;
+}
+
+/* In-article lists and subheadings */
+.gp-h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 22px 0 0 0;
+  color: var(--ink);
+}
+
+.gp-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: color-mix(in oklab, var(--ink) 75%, transparent);
+}
+
+.gp-list li {
+  margin-bottom: 8px;
+}
+
 /* Article figures */
 .gp-figure {
   margin: 20px auto;
