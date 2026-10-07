@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
 import { requireTelegramInitData } from '@/lib/tma'
+import { getUploadsDir, getUploadsBaseUrl } from '@/lib/uploads'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
@@ -27,13 +28,11 @@ export async function POST(request: Request) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer())
-  const uploadsDir = process.env.UPLOADS_DIR ?? path.join(process.cwd(), 'public', 'uploads')
+  const uploadsDir = getUploadsDir()
   await mkdir(uploadsDir, { recursive: true })
 
   const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]+/g, '-')}`
   await writeFile(path.join(uploadsDir, safeName), buffer)
 
-  const baseUrl = process.env.UPLOADS_BASE_URL ?? '/uploads'
-  const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
-  return NextResponse.json({ url: `${normalizedBase}/${safeName}` })
+  return NextResponse.json({ url: `${getUploadsBaseUrl()}/${safeName}` })
 }

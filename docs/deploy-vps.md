@@ -764,7 +764,7 @@ sudo -u postgres pg_restore -d ИМЯ_БАЗЫ /root/backup-ДАТА/old-db.dump
 | `npm ci` падает на `sharp` | нет компилятора | `apt-get install -y build-essential python3`, затем `npm rebuild sharp` |
 | Мини-приложение пустое, «заявки недоступны» | неверный `DATABASE_URL` | проверить `psql "$DATABASE_URL" -c 'select 1'`, логи сервиса |
 | Уведомления в Telegram не приходят | сервер в РФ, нет прокси | `docs/telegram-proxy.md`, `TELEGRAM_PROXY_URL`, затем `diagnose` |
-| Чеки не открываются (404) | `UPLOADS_DIR` не совпал с рабочим каталогом | проверить `WorkingDirectory` в systemd и права на `public/uploads` |
+| Чеки и картинки не открываются (404) | загрузки пишутся в `public/` в рантайме, а `next start` раздаёт оттуда только файлы сборки; либо `UPLOADS_DIR` не совпал с рабочим каталогом | отдача идёт через `/api/uploads/*` (rewrite `/uploads/*`), поэтому важно лишь, чтобы запись и чтение шли из одного каталога: проверьте `UPLOADS_DIR`, cwd процесса (`pm2` — задайте `cwd` в конфиге) и права на каталог загрузок |
 | Логи `EACCES ... data/site-orders.json` | нет прав на `data` | `chown -R $APP_USER:$APP_USER $APP_DIR/data` |
 | В sitemap все `lastmod` одинаковые (дата установки) | каталог не git-репозиторий или клон без истории | клонировать полной историей, не `--depth 1` |
 | `www` отдаёт 200 вместо 301 | старый конфиг nginx всё ещё активен | проверить `sites-enabled`, применить `docs/seo-nginx.md` |

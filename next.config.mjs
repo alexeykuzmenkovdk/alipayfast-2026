@@ -10,6 +10,13 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   trailingSlash: false,
+  async rewrites() {
+    return {
+      // Файлы, загруженные в рантайме, next start из public/ не раздаёт —
+      // отдаём их через обработчик, который читает каталог загрузок с диска.
+      afterFiles: [{ source: '/uploads/:path*', destination: '/api/uploads/:path*' }],
+    }
+  },
   async headers() {
     return [
       {
