@@ -19,6 +19,13 @@ import {
 
 type TabKey = 'exchange' | 'archive' | 'profile'
 
+// Причина отказа авторизации из тела ответа: без неё 401 не отличить от
+// «нет initData», «не тот токен бота» и «подпись не сошлась».
+async function readAuthReason(res: Response) {
+  const data = (await res.json().catch(() => null)) as { reason?: string } | null
+  return data?.reason ?? `HTTP ${res.status}`
+}
+
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'exchange', label: 'Обмен' },
   { key: 'archive', label: 'Архив' },
@@ -36,6 +43,7 @@ export function TelegramMiniApp() {
 
   const [tab, setTab] = useState<TabKey>('exchange')
   const [dbReady, setDbReady] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const [order, setOrder] = useState<Order | null>(null)
   const [steps, setSteps] = useState<PaymentStep[]>([])
@@ -86,7 +94,11 @@ export function TelegramMiniApp() {
   const fetchActiveOrder = useCallback(async () => {
     try {
       const res = await fetch('/api/orders/active', { headers: apiHeaders, cache: 'no-store' })
-      if (!res.ok) return
+      if (!res.ok) {
+        if (res.status === 401) setAuthError(await readAuthReason(res))
+        return
+      }
+      setAuthError(null)
       const data = await res.json()
       setDbReady(data.dbConfigured !== false)
       if (data.order) {
@@ -106,7 +118,12 @@ export function TelegramMiniApp() {
   const fetchArchive = useCallback(async () => {
     try {
       const res = await fetch('/api/orders/archive', { headers: apiHeaders, cache: 'no-store' })
-      if (!res.ok) return
+      if (!res.ok) {
+        if (res.status === 401) setAuthError(await readAuthReason(res))
+        setArchiveLoaded(true)
+        return
+      }
+      setAuthError(null)
       const data = await res.json()
       setDbReady(data.dbConfigured !== false)
       setArchive(data.orders ?? [])
@@ -177,9 +194,13 @@ export function TelegramMiniApp() {
       })
       const data = await res.json()
       if (!res.ok) {
+        if (res.status === 401) {
+          setAuthError(typeof data.reason === 'string' ? data.reason : `HTTP ${res.status}`)
+        }
         setNotice({ kind: 'err', text: data.error === 'Active order exists' ? 'У вас уже есть активная заявка.' : 'Не удалось создать заявку.' })
         return
       }
+      setAuthError(null)
       setOrder(data.order)
       setSteps(data.steps ?? [])
       setMessages(data.messages ?? [])
@@ -299,6 +320,12 @@ export function TelegramMiniApp() {
           </div>
         )}
 
+        {authError && (
+          <div className="tma-alert err">
+            Telegram не подтвердил сессию ({authError}). Откройте мини-приложение из бота <b>@AlipayFastBot</b> и попробуйте снова.
+          </div>
+        )}
+
         {notice && <div className={`tma-alert ${notice.kind === 'err' ? 'err' : 'ok'}`}>{notice.text}</div>}
 
         {tab === 'exchange' &&
@@ -369,7 +396,7 @@ export function TelegramMiniApp() {
                   <div className="tma-hint">Обновлено {rates.updatedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
 
-                <button className="tma-btn" type="button" disabled={busy || !dbReady} onClick={createOrder}>
+                <button className="tma-btn" type="button" disabled={busy || !dbReady || Boolean(authError)} onClick={createOrder}>
                   Создать заявку
                 </button>
               </section>

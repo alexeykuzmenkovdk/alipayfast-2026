@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createOrder, getActiveOrder, listOrderMessages, listOrderSteps } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
-import { requireTelegramInitData } from '@/lib/tma'
+import { telegramAuth } from '@/lib/tma'
 import { notifyAsync } from '@/lib/telegram-bot'
 
 export const dynamic = 'force-dynamic'
@@ -11,9 +11,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Database is not configured' }, { status: 503 })
   }
 
-  const telegram = requireTelegramInitData(request.headers.get('x-telegram-init-data'))
-  if (!telegram?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const telegram = telegramAuth(request.headers.get('x-telegram-init-data'))
+  if (!telegram.user) {
+    return NextResponse.json({ error: 'Unauthorized', reason: telegram.reason ?? 'unknown' }, { status: 401 })
   }
 
   const existing = await getActiveOrder(telegram.user.id)

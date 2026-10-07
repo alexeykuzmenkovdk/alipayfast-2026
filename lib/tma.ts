@@ -66,21 +66,74 @@ function botToken() {
   return process.env.TELEGRAM_MINI_APP_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN
 }
 
-// Возвращает пользователя Telegram или null, если запрос не авторизован.
-// В режиме разработки без initData отдаёт демо-пользователя, чтобы мини-приложение
-// можно было открыть в браузере.
-export function requireTelegramInitData(initData: string | null): TelegramInitData | null {
-  const token = botToken()
+// Все токены аккаунта — для диагностики: если initData подписана не основным
+// ботом, подскажем, каким именно.
+function knownTokens(): { name: string; token: string }[] {
+  const entries: [string, string | undefined][] = [
+    ['TELEGRAM_MINI_APP_BOT_TOKEN', process.env.TELEGRAM_MINI_APP_BOT_TOKEN],
+    ['TELEGRAM_BOT_TOKEN', process.env.TELEGRAM_BOT_TOKEN],
+    ['TELEGRAM_SITE_BOT_TOKEN', process.env.TELEGRAM_SITE_BOT_TOKEN],
+  ]
+  return entries
+    .filter((entry): entry is [string, string] => Boolean(entry[1]))
+    .map(([name, token]) => ({ name, token }))
+}
+
+export type TelegramAuth = TelegramInitData & { reason?: string }
+
+// Проверяет подпись initData и возвращает пользователя либо причину отказа.
+// Причину отдаём в ответе API и в логах — без неё 401 не отличить от «нет
+// заголовка», «не тот токен» и «подпись не сошлась».
+export function telegramAuth(initData: string | null): TelegramAuth {
   const isProd = process.env.NODE_ENV === 'production'
 
-  if (isProd) {
-    if (!initData || !token) return null
-    if (!validateInitData(initData, token)) return null
+  if (!isProd) {
+    // Локальная разработка: подпись не проверяем, чтобы можно было открыть
+    // мини-приложение прямо в браузере.
+    if (!initData) return { user: { id: 0, username: 'demo' } }
     return getTelegramUser(initData)
   }
 
-  // Локальная разработка: подпись не проверяем, чтобы можно было открыть
-  // мини-приложение прямо в браузере.
-  if (!initData) return { user: { id: 0, username: 'demo' } }
-  return getTelegramUser(initData)
+  if (!initData) return { reason: 'no_init_data' }
+  const token = botToken()
+  if (!token) return { reason: 'no_bot_token' }
+
+  if (!validateInitData(initData, token)) {
+    const data = parseInitData(initData)
+    const matched = knownTokens()
+      .filter((entry) => entry.token !== token && validateInitData(initData, entry.token))
+      .map((entry) => entry.name)
+
+    console.warn(
+      '[tma] initData signature mismatch',
+      JSON.stringify({
+        fields: Object.keys(data).sort(),
+        hasSignature: Boolean(data.signature),
+        hashLength: data.hash?.length ?? 0,
+        authDate: data.auth_date ?? null,
+        initDataLength: initData.length,
+        userId: data.user ? safeUserId(data.user) : null,
+        matchedOtherToken: matched.length ? matched : null,
+      }),
+    )
+    return { reason: matched.length ? `signed_by:${matched[0]}` : 'signature_mismatch' }
+  }
+
+  const parsed = getTelegramUser(initData)
+  if (!parsed.user) return { reason: 'no_user' }
+  return parsed
+}
+
+function safeUserId(rawUser: string): number | null {
+  try {
+    return (JSON.parse(rawUser) as TelegramUser).id ?? null
+  } catch {
+    return null
+  }
+}
+
+// Возвращает пользователя Telegram или null, если запрос не авторизован.
+export function requireTelegramInitData(initData: string | null): TelegramInitData | null {
+  const auth = telegramAuth(initData)
+  return auth.user ? { user: auth.user, query_id: auth.query_id } : null
 }
