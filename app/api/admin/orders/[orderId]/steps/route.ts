@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { addMessage, addPaymentStep, getOrderById } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
-import { isAdminRequest } from '@/lib/admin-access'
+import { adminUnauthorizedBody, isAdminRequest } from '@/lib/admin-access'
 import { notifyAsync, dealRoomKeyboard } from '@/lib/telegram-bot'
 import { stepReadyText } from '@/lib/deal-room'
 
 export async function POST(request: Request, { params }: { params: { orderId: string } }) {
   if (!isAdminRequest(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(adminUnauthorizedBody(request), { status: 401 })
   }
 
   if (!isDbConfigured()) {

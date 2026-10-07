@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { addShowcaseItem, listAllShowcaseItems, setShowcasePublish } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
-import { isAdminRequest } from '@/lib/admin-access'
+import { adminUnauthorizedBody, isAdminRequest } from '@/lib/admin-access'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   if (!isAdminRequest(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(adminUnauthorizedBody(request), { status: 401 })
   }
 
   if (!isDbConfigured()) {
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   if (!isAdminRequest(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(adminUnauthorizedBody(request), { status: 401 })
   }
 
   if (!isDbConfigured()) {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   if (!isAdminRequest(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(adminUnauthorizedBody(request), { status: 401 })
   }
 
   if (!isDbConfigured()) {

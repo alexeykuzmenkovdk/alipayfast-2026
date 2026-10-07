@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getOrderById, listOrderSteps } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
-import { isAdminRequest } from '@/lib/admin-access'
+import { adminUnauthorizedBody, isAdminRequest } from '@/lib/admin-access'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request, { params }: { params: { orderId: string } }) {
   if (!isAdminRequest(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(adminUnauthorizedBody(request), { status: 401 })
   }
 
   if (!isDbConfigured()) {

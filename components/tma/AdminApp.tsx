@@ -30,11 +30,37 @@ const QUICK_REPLIES = [
   'Оплата подтверждена, юани зачисляются на Alipay в течение ~15 минут.',
 ]
 
+// Причина отказа приходит в теле 401: без неё «доступ только для оператора»
+// не отличить от «открыли вне Telegram» и «подпись не сошлась».
+async function deniedReasonFrom(res: Response) {
+  const data = (await res.json().catch(() => null)) as { reason?: string } | null
+  return data?.reason ?? `HTTP ${res.status}`
+}
+
+function deniedText(reason: string) {
+  if (reason === 'no_init_data') {
+    return 'Приложение открыто вне Telegram: сервер не получил данные сессии. Откройте панель из бота.'
+  }
+  if (reason.startsWith('not_operator:')) {
+    return `Вы вошли под Telegram ID ${reason.slice('not_operator:'.length)}, а доступ разрешён только аккаунту из ADMIN_USER_ID.`
+  }
+  if (reason === 'admin_user_id_missing') {
+    return 'На сервере не задан ADMIN_USER_ID — доступ открыть некому.'
+  }
+  if (reason.startsWith('signed_by:')) {
+    return `Данные подписаны другим Telegram-ботом (${reason.slice('signed_by:'.length)}). Откройте панель из @AlipayFastBot.`
+  }
+  if (reason === 'signature_mismatch') {
+    return 'Подпись Telegram не совпала. Откройте панель из @AlipayFastBot.'
+  }
+  return `Сервер отклонил доступ (${reason}).`
+}
+
 export function AdminApp() {
   const telegram = useTelegram()
 
   const [tab, setTab] = useState<Tab>('active')
-  const [denied, setDenied] = useState(false)
+  const [denied, setDenied] = useState<string | null>(null)
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -62,9 +88,10 @@ export function AdminApp() {
     const status = tab === 'active' ? 'active' : 'archive'
     const res = await fetch(`/api/admin/orders?status=${status}`, { headers: telegram.headers, cache: 'no-store' })
     if (res.status === 401) {
-      setDenied(true)
+      setDenied(await deniedReasonFrom(res))
       return
     }
+    setDenied(null)
     const data = await res.json()
     setOrders(data.orders ?? [])
     setSelectedId((prev) => (status === 'active' && prev && data.orders?.some((o: Order) => o.id === prev) ? prev : data.orders?.[0]?.id ?? ''))
@@ -73,9 +100,10 @@ export function AdminApp() {
   const loadStats = useCallback(async () => {
     const res = await fetch('/api/admin/stats', { headers: telegram.headers, cache: 'no-store' })
     if (res.status === 401) {
-      setDenied(true)
+      setDenied(await deniedReasonFrom(res))
       return
     }
+    setDenied(null)
     setStats(await res.json())
   }, [telegram.headers])
 
@@ -87,9 +115,10 @@ export function AdminApp() {
         fetch(`/api/admin/orders/${orderId}/messages`, { headers: telegram.headers, cache: 'no-store' }),
       ])
       if (orderRes.status === 401 || messagesRes.status === 401) {
-        setDenied(true)
+        setDenied(await deniedReasonFrom(orderRes.status === 401 ? orderRes : messagesRes))
         return
       }
+      setDenied(null)
       const orderData = await orderRes.json()
       const messagesData = await messagesRes.json()
       setSteps(orderData.steps ?? [])
@@ -131,7 +160,7 @@ export function AdminApp() {
         body: payload ? JSON.stringify(payload) : undefined,
       })
       if (res.status === 401) {
-        setDenied(true)
+        setDenied(await deniedReasonFrom(res))
         return false
       }
       const data = await res.json().catch(() => ({}))
@@ -139,6 +168,7 @@ export function AdminApp() {
         setNotice({ kind: 'err', text: data.error ?? 'Не получилось выполнить действие' })
         return false
       }
+      setDenied(null)
       if (okText) setNotice({ kind: 'ok', text: okText })
       return true
     } finally {
@@ -211,10 +241,22 @@ export function AdminApp() {
     return (
       <div className="tma">
         <main className="tma-body" style={{ paddingTop: 40 }}>
-          <div className="tma-alert err">
-            Доступ только для оператора. Откройте это приложение из бота под аккаунтом, чей ID указан в
-            <b> ADMIN_USER_ID</b>.
+          <div className="tma-alert err">Доступ только для оператора. {deniedText(denied)}</div>
+          <div className="tma-hint" style={{ marginTop: 12 }}>
+            Вы вошли как @{telegram.userLabel} (ID {telegram.user?.id ?? '—'}). Код причины: <b>{denied}</b>
           </div>
+          <button
+            className="tma-btn"
+            type="button"
+            style={{ marginTop: 16 }}
+            onClick={() => {
+              setDenied(null)
+              loadOrders()
+              loadStats()
+            }}
+          >
+            Повторить
+          </button>
         </main>
       </div>
     )
