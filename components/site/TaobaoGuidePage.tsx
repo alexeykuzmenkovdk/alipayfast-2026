@@ -60,9 +60,6 @@ export function TaobaoGuidePage() {
     <main className="gp">
       <section className="gp-hero">
         <div className="wrap">
-          <Link href="/#top" className="gp-back">
-            ← Вернуться на главную
-          </Link>
           <div className="gp-hero-content">
             <div>
               <h1>Как заказать товары с маркетплейса Taobao: пошаговая инструкция 2026</h1>
@@ -222,7 +219,7 @@ export function TaobaoGuidePage() {
                     появившемся окне нажмите <strong>«Agree»</strong>.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-08.png"
+                    src="/assets/taobao-guide/taobao-08.webp"
                     alt="Подтверждение регистрации в Alipay"
                     width={1080}
                     height={1080}
@@ -318,7 +315,7 @@ export function TaobaoGuidePage() {
                     оранжевую кнопку <strong>«确认»</strong>.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-11.png"
+                    src="/assets/taobao-guide/taobao-11.webp"
                     alt="Переключение в режим материкового Китая"
                     width={1080}
                     height={1080}
@@ -333,7 +330,7 @@ export function TaobaoGuidePage() {
                     а также инструкция о том, как получать золотые монеты.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-12.png"
+                    src="/assets/taobao-guide/taobao-12.webp"
                     alt="Кнопки в верхней части приложения"
                     width={1391}
                     height={660}
@@ -347,7 +344,7 @@ export function TaobaoGuidePage() {
                     <li>личный кабинет.</li>
                   </ol>
                   <Shot
-                    src="/assets/taobao-guide/taobao-13.png"
+                    src="/assets/taobao-guide/taobao-13.webp"
                     alt="Основные разделы в нижней панели"
                     width={1620}
                     height={264}
@@ -369,7 +366,7 @@ export function TaobaoGuidePage() {
                         подсказывать подходящие запросы — блок <strong>«猜你想搜»</strong> (возможно, вы ищете).
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-14.png"
+                        src="/assets/taobao-guide/taobao-14.webp"
                         alt="Подсказки в строке поиска"
                         width={1080}
                         height={1080}
@@ -389,7 +386,7 @@ export function TaobaoGuidePage() {
                         <li>фильтр.</li>
                       </ol>
                       <Shot
-                        src="/assets/taobao-guide/taobao-15.png"
+                        src="/assets/taobao-guide/taobao-15.webp"
                         alt="Фильтры и сортировка результатов"
                         width={1080}
                         height={1080}
@@ -408,7 +405,7 @@ export function TaobaoGuidePage() {
                         <li>доставка в течение 24 часов.</li>
                       </ol>
                       <Shot
-                        src="/assets/taobao-guide/taobao-16.png"
+                        src="/assets/taobao-guide/taobao-16.webp"
                         alt="Панель фильтров"
                         width={1080}
                         height={1080}
@@ -422,7 +419,7 @@ export function TaobaoGuidePage() {
                         галереи по кнопке <strong>«相册»</strong> в левом нижнем углу.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-17.png"
+                        src="/assets/taobao-guide/taobao-17.webp"
                         alt="Поиск товара по фотографии"
                         width={1080}
                         height={1080}
@@ -432,7 +429,7 @@ export function TaobaoGuidePage() {
                         по цене от меньшей к большей и наоборот.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-18.png"
+                        src="/assets/taobao-guide/taobao-18.webp"
                         alt="Сортировка результатов поиска по фото"
                         width={1080}
                         height={1080}
@@ -443,7 +440,7 @@ export function TaobaoGuidePage() {
                         другие варианты.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-19.png"
+                        src="/assets/taobao-guide/taobao-19.webp"
                         alt="Ключевые слова для похожих товаров"
                         width={1080}
                         height={1080}
@@ -453,7 +450,7 @@ export function TaobaoGuidePage() {
                         углу.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-20.png"
+                        src="/assets/taobao-guide/taobao-20.webp"
                         alt="История поиска по фото"
                         width={1080}
                         height={1080}
@@ -477,13 +474,13 @@ export function TaobaoGuidePage() {
                     расширенное меню.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-21.png"
+                    src="/assets/taobao-guide/taobao-21.webp"
                     alt="Кнопки в карточке товара"
                     width={1080}
                     height={1080}
                   />
                   <Shot
-                    src="/assets/taobao-guide/taobao-22.png"
+                    src="/assets/taobao-guide/taobao-22.webp"
                     alt="Панель управления в карточке"
                     width={1424}
                     height={412}
@@ -500,7 +497,7 @@ export function TaobaoGuidePage() {
                     <li>перейти к своим заказам.</li>
                   </ol>
                   <Shot
-                    src="/assets/taobao-guide/taobao-23.png"
+                    src="/assets/taobao-guide/taobao-23.webp"
                     alt="Дополнительные кнопки в карточке"
                     width={916}
                     height={1080}
@@ -509,7 +506,7 @@ export function TaobaoGuidePage() {
                     Чтобы скопировать ссылку на товар, нажмите значок <strong>«цепочка»</strong>.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-24.png"
+                    src="/assets/taobao-guide/taobao-24.webp"
                     alt="Копирование ссылки на товар"
                     width={1080}
                     height={1080}
@@ -545,7 +542,7 @@ export function TaobaoGuidePage() {
                     полностью, нажмите <strong>«查看全部»</strong> (посмотреть все).
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-26.png"
+                    src="/assets/taobao-guide/taobao-26.webp"
                     alt="Просмотр отзывов на товар"
                     width={448}
                     height={888}
@@ -555,7 +552,7 @@ export function TaobaoGuidePage() {
                     насколько товар оправдывает ожидания.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-27.png"
+                    src="/assets/taobao-guide/taobao-27.webp"
                     alt="Категории отзывов"
                     width={1080}
                     height={1080}
@@ -582,7 +579,7 @@ export function TaobaoGuidePage() {
                     <li>удалить товар из корзины.</li>
                   </ol>
                   <Shot
-                    src="/assets/taobao-guide/taobao-28.png"
+                    src="/assets/taobao-guide/taobao-28.webp"
                     alt="Управление содержимым корзины"
                     width={1080}
                     height={1080}
@@ -723,7 +720,7 @@ export function TaobaoGuidePage() {
                         <strong>结算</strong> (оформить заказ).
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-38.png"
+                        src="/assets/taobao-guide/taobao-38.webp"
                         alt="Оформление заказа из корзины"
                         width={1080}
                         height={1080}
@@ -734,7 +731,7 @@ export function TaobaoGuidePage() {
                         <strong>«支付宝(大陆版)»</strong> — поставьте галочку в нужной области.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-39.png"
+                        src="/assets/taobao-guide/taobao-39.webp"
                         alt="Выбор способа оплаты Alipay"
                         width={1080}
                         height={1080}
@@ -745,7 +742,7 @@ export function TaobaoGuidePage() {
                         <strong>«继续支付»</strong> внизу экрана.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-40.png"
+                        src="/assets/taobao-guide/taobao-40.webp"
                         alt="Подтверждение оплаты с баланса Alipay"
                         width={1080}
                         height={696}
@@ -765,7 +762,7 @@ export function TaobaoGuidePage() {
                         отмените запрос кнопкой <strong>«取消»</strong>.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-41.png"
+                        src="/assets/taobao-guide/taobao-41.webp"
                         alt="Оплата заказа с помощью друга"
                         width={1080}
                         height={712}
@@ -795,7 +792,7 @@ export function TaobaoGuidePage() {
                     <strong>«退款»</strong> (возврат).
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-42.png"
+                    src="/assets/taobao-guide/taobao-42.webp"
                     alt="Оформление возврата заказа"
                     width={1080}
                     height={1080}
@@ -805,7 +802,7 @@ export function TaobaoGuidePage() {
                     нужен), — и нажмите оранжевую кнопку <strong>«下一步»</strong>.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-43.png"
+                    src="/assets/taobao-guide/taobao-43.webp"
                     alt="Выбор причины возврата"
                     width={1080}
                     height={1080}
@@ -815,7 +812,7 @@ export function TaobaoGuidePage() {
                     углу и дождитесь возврата средств.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-44.png"
+                    src="/assets/taobao-guide/taobao-44.webp"
                     alt="Отправка заявки на возврат"
                     width={1080}
                     height={716}
@@ -843,7 +840,7 @@ export function TaobaoGuidePage() {
                     посредника. Откройте кабинет и нажмите <strong>«Создать заказ»</strong>.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-46.png"
+                    src="/assets/taobao-guide/taobao-46.webp"
                     alt="Создание заказа на доставку"
                     width={325}
                     height={650}
@@ -860,7 +857,7 @@ export function TaobaoGuidePage() {
                         про трек-номер ниже).
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-47.png"
+                        src="/assets/taobao-guide/taobao-47.webp"
                         alt="Заполнение общих данных"
                         width={325}
                         height={650}
@@ -888,7 +885,7 @@ export function TaobaoGuidePage() {
                         <strong>Дополнительные услуги</strong> — при желании можно заказать фотоотчёт по заказу.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-48.png"
+                        src="/assets/taobao-guide/taobao-48.webp"
                         alt="Заполнение данных о товаре"
                         width={325}
                         height={650}
@@ -906,7 +903,7 @@ export function TaobaoGuidePage() {
                         товаров.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-49.png"
+                        src="/assets/taobao-guide/taobao-49.webp"
                         alt="Страховка и дополнительная упаковка"
                         width={325}
                         height={650}
@@ -924,7 +921,7 @@ export function TaobaoGuidePage() {
                         (консолидация), чтобы отправили всё вместе.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-50.png"
+                        src="/assets/taobao-guide/taobao-50.webp"
                         alt="Выбор способа доставки"
                         width={325}
                         height={650}
@@ -946,7 +943,7 @@ export function TaobaoGuidePage() {
                         вернуться и отредактировать.
                       </p>
                       <Shot
-                        src="/assets/taobao-guide/taobao-51.png"
+                        src="/assets/taobao-guide/taobao-51.webp"
                         alt="Настройка данных о доставке"
                         width={325}
                         height={650}
@@ -978,7 +975,7 @@ export function TaobaoGuidePage() {
                     вы попадёте в список товаров, которые уже переданы в доставку и имеют трек-номер.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-53.png"
+                    src="/assets/taobao-guide/taobao-53.webp"
                     alt="Список отправленных товаров"
                     width={1080}
                     height={1080}
@@ -988,7 +985,7 @@ export function TaobaoGuidePage() {
                     затем оранжевые иероглифы <strong>«详细信息»</strong> (подробности) в правом верхнем углу.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-54.png"
+                    src="/assets/taobao-guide/taobao-54.webp"
                     alt="Подробности доставки заказа"
                     width={1080}
                     height={1080}
@@ -999,7 +996,7 @@ export function TaobaoGuidePage() {
                     <strong>«复制成功»</strong>.
                   </p>
                   <Shot
-                    src="/assets/taobao-guide/taobao-55.png"
+                    src="/assets/taobao-guide/taobao-55.webp"
                     alt="Копирование трек-номера"
                     width={1080}
                     height={1080}
@@ -1015,7 +1012,7 @@ export function TaobaoGuidePage() {
             <div className="gp-cta">
               <h2>Нужно пополнить Alipay для покупок на Taobao?</h2>
               <p>
-                Поможем с пополнением кошелька: курс ЦБ РФ плюс прозрачная надбавка, без скрытых комиссий. Зачисление
+                Поможем с пополнением кошелька: наш курс плюс прозрачная надбавка, без скрытых комиссий. Зачисление
                 обычно занимает около 15 минут.
               </p>
               <div className="gp-contacts">

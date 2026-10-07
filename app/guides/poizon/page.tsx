@@ -1,13 +1,30 @@
-import { Metadata } from 'next'
-import { PoizonGuidePage } from '@/components/site/PoizonGuidePage'
+import type { Metadata } from 'next'
 import '@/components/site/guides.css'
+import { PoizonGuidePage } from '@/components/site/PoizonGuidePage'
+import { GuideBreadcrumbs } from '@/components/site/GuideBreadcrumbs'
+import { RelatedGuides } from '@/components/site/RelatedGuides'
+import { pageMetadata, articleGraph, jsonLd } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Как заказать товары с маркетплейса Poizon: полная инструкция 2026 | AlipayFast',
-  description:
-    'Пошаговый гайд по Poizon (Dewu): как установить приложение, зарегистрироваться, найти товар, оплатить через Alipay, оформить доставку на склад посредника и получить посылку в России.',
-}
+export const metadata: Metadata = pageMetadata({
+  title: "Как заказать товары с Poizon: инструкция 2026",
+  description: "Пошагово: установка Poizon (Dewu), регистрация, поиск товара, оплата через Alipay и доставка на склад посредника в Китае.",
+  path: "/guides/poizon",
+  image: "/assets/covers/poizon.jpg",
+  type: 'article',
+})
 
 export default function Page() {
-  return <PoizonGuidePage />
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "Как заказать товары с Poizon: инструкция 2026", description: "Пошагово: установка Poizon (Dewu), регистрация, поиск товара, оплата через Alipay и доставка на склад посредника в Китае.", path: "/guides/poizon", image: "/assets/covers/poizon.jpg" })) }}
+      />
+      <GuideBreadcrumbs title={
+        "Как заказать товары с Poizon"
+      } />
+      <PoizonGuidePage />
+      <RelatedGuides path="/guides/poizon" />
+    </>
+  )
 }

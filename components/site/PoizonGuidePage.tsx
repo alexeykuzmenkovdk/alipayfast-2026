@@ -59,9 +59,6 @@ export function PoizonGuidePage() {
     <main className="gp">
       <section className="gp-hero">
         <div className="wrap">
-          <Link href="/#top" className="gp-back">
-            ← Вернуться на главную
-          </Link>
           <div className="gp-hero-content">
             <div>
               <h1>Как заказать товары с маркетплейса Poizon: полная инструкция 2026</h1>
@@ -245,7 +242,7 @@ export function PoizonGuidePage() {
                     </div>
                   </div>
                   <Shot
-                    src="/assets/poizon-guide/poizon-08.png"
+                    src="/assets/poizon-guide/poizon-08.webp"
                     alt="Выбор страны и кода при регистрации"
                     width={1080}
                     height={880}
@@ -255,7 +252,7 @@ export function PoizonGuidePage() {
                     СМС-код. Затем введите полученный код в приложении.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-09.png"
+                    src="/assets/poizon-guide/poizon-09.webp"
                     alt="Запрос и ввод кода подтверждения"
                     width={1080}
                     height={900}
@@ -265,7 +262,7 @@ export function PoizonGuidePage() {
                     смартфон и запросите код ещё раз.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-10.png"
+                    src="/assets/poizon-guide/poizon-10.webp"
                     alt="Главное меню после успешной регистрации"
                     width={553}
                     height={768}
@@ -295,7 +292,7 @@ export function PoizonGuidePage() {
                         товара. Здесь же бывают прямые эфиры магазинов и блогеров.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-11.png"
+                        src="/assets/poizon-guide/poizon-11.webp"
                         alt="Лента сообщества в Poizon"
                         width={1080}
                         height={572}
@@ -310,7 +307,7 @@ export function PoizonGuidePage() {
                         переключаться свайпом влево и вправо.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-12.png"
+                        src="/assets/poizon-guide/poizon-12.webp"
                         alt="Маркетплейс Poizon с товарами"
                         width={1080}
                         height={1080}
@@ -354,7 +351,7 @@ export function PoizonGuidePage() {
                         электронный сертификат. Ещё доступны чистка и восстановление обуви и другие услуги.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-13.png"
+                        src="/assets/poizon-guide/poizon-13.webp"
                         alt="Центр услуг и проверка подлинности"
                         width={1080}
                         height={1080}
@@ -368,7 +365,7 @@ export function PoizonGuidePage() {
                         доставки и другое.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-14.png"
+                        src="/assets/poizon-guide/poizon-14.webp"
                         alt="Личный профиль в приложении"
                         width={1080}
                         height={1080}
@@ -393,7 +390,7 @@ export function PoizonGuidePage() {
                     </li>
                   </ol>
                   <Shot
-                    src="/assets/poizon-guide/poizon-15.png"
+                    src="/assets/poizon-guide/poizon-15.webp"
                     alt="Блок действий с товарами"
                     width={1179}
                     height={446}
@@ -447,7 +444,7 @@ export function PoizonGuidePage() {
                     </li>
                   </ol>
                   <Shot
-                    src="/assets/poizon-guide/poizon-17.png"
+                    src="/assets/poizon-guide/poizon-17.webp"
                     alt="Блок сервисов и разделов"
                     width={1179}
                     height={448}
@@ -460,21 +457,21 @@ export function PoizonGuidePage() {
                     подписаться.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-18.png"
+                    src="/assets/poizon-guide/poizon-18.webp"
                     alt="Лента с обзорами товаров"
                     width={727}
                     height={374}
                   />
                   <p>Также доступны лайки, комментарии, добавление поста в избранное и копирование ссылки.</p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-19.png"
+                    src="/assets/poizon-guide/poizon-19.webp"
                     alt="Взаимодействие с публикациями"
                     width={1080}
                     height={880}
                   />
                   <p>Ссылки на товары встречаются прямо на фото постов или в тексте публикации.</p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-20.png"
+                    src="/assets/poizon-guide/poizon-20.webp"
                     alt="Ссылка на товар в публикации"
                     width={1080}
                     height={574}
@@ -490,7 +487,7 @@ export function PoizonGuidePage() {
                     <li>Рассрочка и займы — тоже только для жителей Китая.</li>
                   </ol>
                   <Shot
-                    src="/assets/poizon-guide/poizon-21.png"
+                    src="/assets/poizon-guide/poizon-21.webp"
                     alt="Центр услуг приложения"
                     width={1080}
                     height={1080}
@@ -587,7 +584,7 @@ export function PoizonGuidePage() {
                     <strong> «Nike AirMax»</strong>, и нажмите кнопку поиска.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-27.png"
+                    src="/assets/poizon-guide/poizon-27.webp"
                     alt="Поиск товара через строку поиска"
                     width={1080}
                     height={1080}
@@ -608,7 +605,7 @@ export function PoizonGuidePage() {
                     нужный размер, затем нажмите кнопку поиска внизу.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-29.png"
+                    src="/assets/poizon-guide/poizon-29.webp"
                     alt="Панель фильтров поиска"
                     width={1080}
                     height={962}
@@ -621,7 +618,7 @@ export function PoizonGuidePage() {
                     </p>
                   </div>
                   <Shot
-                    src="/assets/poizon-guide/poizon-30.png"
+                    src="/assets/poizon-guide/poizon-30.webp"
                     alt="Фильтр по цене и размеру"
                     width={1080}
                     height={1080}
@@ -654,7 +651,7 @@ export function PoizonGuidePage() {
                     </li>
                   </ol>
                   <Shot
-                    src="/assets/poizon-guide/poizon-31.png"
+                    src="/assets/poizon-guide/poizon-31.webp"
                     alt="Карточка товара в Poizon"
                     width={1080}
                     height={700}
@@ -745,7 +742,7 @@ export function PoizonGuidePage() {
                     кнопку оплаты.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-35.png"
+                    src="/assets/poizon-guide/poizon-35.webp"
                     alt="Подтверждение заказа и выбор способа оплаты"
                     width={1080}
                     height={1080}
@@ -755,7 +752,7 @@ export function PoizonGuidePage() {
                     правильно, покупка переместится в раздел оплаченных или отправленных товаров в вашем профиле.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-36.png"
+                    src="/assets/poizon-guide/poizon-36.webp"
                     alt="Заказ перешёл в оплаченные товары"
                     width={1080}
                     height={1080}
@@ -765,7 +762,7 @@ export function PoizonGuidePage() {
                     купленных товаров, выберите нужный и нажмите кнопку просмотра, затем — «Сохранить изображение».
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-37.png"
+                    src="/assets/poizon-guide/poizon-37.webp"
                     alt="Сохранение карточки покупки"
                     width={970}
                     height={615}
@@ -784,7 +781,7 @@ export function PoizonGuidePage() {
                     отправленных на склад Poizon, — там будет отметка с цифрой.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-38.png"
+                    src="/assets/poizon-guide/poizon-38.webp"
                     alt="Поиск заказа для отмены"
                     width={1080}
                     height={956}
@@ -799,7 +796,7 @@ export function PoizonGuidePage() {
                     обслуживания.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-39.png"
+                    src="/assets/poizon-guide/poizon-39.webp"
                     alt="Подтверждение возврата средств"
                     width={1636}
                     height={984}
@@ -817,7 +814,7 @@ export function PoizonGuidePage() {
                     кабинете. Откройте кабинет и нажмите <strong>«Создать заказ»</strong>.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-40.png"
+                    src="/assets/poizon-guide/poizon-40.webp"
                     alt="Кнопка создания заказа в кабинете посредника"
                     width={325}
                     height={650}
@@ -834,7 +831,7 @@ export function PoizonGuidePage() {
                         про трек-номер ниже).
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-41.png"
+                        src="/assets/poizon-guide/poizon-41.webp"
                         alt="Заполнение общих данных заказа"
                         width={325}
                         height={650}
@@ -863,7 +860,7 @@ export function PoizonGuidePage() {
                         <strong>Дополнительные услуги</strong> — при желании можно заказать фотоотчёт по заказу.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-42.png"
+                        src="/assets/poizon-guide/poizon-42.webp"
                         alt="Заполнение данных о товаре"
                         width={325}
                         height={650}
@@ -881,7 +878,7 @@ export function PoizonGuidePage() {
                         обрешётку — пригодится для хрупких товаров.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-43.png"
+                        src="/assets/poizon-guide/poizon-43.webp"
                         alt="Выбор страховки и упаковки"
                         width={325}
                         height={650}
@@ -899,7 +896,7 @@ export function PoizonGuidePage() {
                         (консолидация) — тогда отправят всё вместе.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-44.png"
+                        src="/assets/poizon-guide/poizon-44.webp"
                         alt="Выбор способа доставки"
                         width={325}
                         height={650}
@@ -921,7 +918,7 @@ export function PoizonGuidePage() {
                         заказа, чтобы позже вернуться, отредактировать и отправить.
                       </p>
                       <Shot
-                        src="/assets/poizon-guide/poizon-45.png"
+                        src="/assets/poizon-guide/poizon-45.webp"
                         alt="Настройка данных о доставке"
                         width={325}
                         height={650}
@@ -976,7 +973,7 @@ export function PoizonGuidePage() {
                     автоматически, и вставьте в соответствующее поле в кабинете вашего посредника.
                   </p>
                   <Shot
-                    src="/assets/poizon-guide/poizon-48.png"
+                    src="/assets/poizon-guide/poizon-48.webp"
                     alt="Просмотр и копирование трек-номера"
                     width={1080}
                     height={522}
@@ -1033,7 +1030,7 @@ export function PoizonGuidePage() {
             <div className="gp-cta">
               <h2>Нужно пополнить Alipay для заказа на Poizon?</h2>
               <p>
-                Поможем с пополнением кошелька: курс ЦБ РФ плюс прозрачная надбавка, без скрытых комиссий. Зачисление
+                Поможем с пополнением кошелька: наш курс плюс прозрачная надбавка, без скрытых комиссий. Зачисление
                 обычно занимает около 15 минут.
               </p>
               <div className="gp-contacts">

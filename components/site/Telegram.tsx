@@ -57,7 +57,7 @@ export function TelegramSection() {
               <span>扫一扫</span>
             </div>
             <div className="tg-qr">
-              <Image src="/assets/qr.png" alt="QR-код Telegram @alipayfast" width={260} height={260} />
+              <Image src="/assets/qr.webp" alt="QR-код Telegram @alipayfast" width={260} height={260} />
             </div>
             <div className="tg-card-b">
               <b>@ALIPAYFAST</b>
@@ -88,7 +88,7 @@ export function TgFloat() {
           <button className="tgf-x" onClick={() => setOpen(false)} aria-label="Закрыть">
             ×
           </button>
-          <Image src="/assets/qr.png" alt="QR Telegram" width={180} height={180} />
+          <Image src="/assets/qr.webp" alt="QR Telegram" width={180} height={180} />
           <b>@alipayfast</b>
           <span>Курс каждый день + спецкурс для подписчиков</span>
           <a className="btn tg-btn btn-sm" href="https://t.me/alipayfast" target="_blank" style={{ width: '100%' }}>

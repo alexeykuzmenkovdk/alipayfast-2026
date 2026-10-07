@@ -55,9 +55,6 @@ export function AlipayChinaGuidePage() {
     <main className="gp">
       <section className="gp-hero">
         <div className="wrap">
-          <Link href="/#top" className="gp-back">
-            ← Вернуться на главную
-          </Link>
           <div className="gp-hero-content">
             <div>
               <h1>Как платить через Alipay в Китае: полный гид для туриста</h1>
@@ -171,7 +168,7 @@ export function AlipayChinaGuidePage() {
                         </p>
                       </div>
                       <Shot
-                        src="/assets/alipay-china/03-download.png"
+                        src="/assets/alipay-china/03-download.webp"
                         alt="Установка приложения Alipay"
                         width={1286}
                         height={643}
@@ -187,7 +184,7 @@ export function AlipayChinaGuidePage() {
                         придёт именно туда.
                       </p>
                       <Shot
-                        src="/assets/alipay-china/04-register.png"
+                        src="/assets/alipay-china/04-register.webp"
                         alt="Регистрация аккаунта в Alipay"
                         width={1299}
                         height={605}
@@ -203,7 +200,7 @@ export function AlipayChinaGuidePage() {
                         загранпаспорта, заполните данные и пройдите проверку по лицу.
                       </p>
                       <Shot
-                        src="/assets/alipay-china/05-verify.png"
+                        src="/assets/alipay-china/05-verify.webp"
                         alt="Подтверждение личности в Alipay"
                         width={768}
                         height={1024}
@@ -274,7 +271,7 @@ export function AlipayChinaGuidePage() {
                         </li>
                       </ul>
                       <Shot
-                        src="/assets/alipay-china/08-pay.png"
+                        src="/assets/alipay-china/08-pay.webp"
                         alt="Оплата по QR-коду в магазине"
                         width={1080}
                         height={670}
@@ -326,7 +323,7 @@ export function AlipayChinaGuidePage() {
                     </li>
                   </ol>
                   <Shot
-                    src="/assets/alipay-china/11-transport.png"
+                    src="/assets/alipay-china/11-transport.webp"
                     alt="Оплата транспорта в Alipay"
                     width={2000}
                     height={1125}
@@ -354,7 +351,7 @@ export function AlipayChinaGuidePage() {
                     Для короткой поездки удобнее Alipay: он проще в настройке и дружелюбнее к приезжим.
                   </p>
                   <Shot
-                    src="/assets/alipay-china/12-compare.png"
+                    src="/assets/alipay-china/12-compare.webp"
                     alt="Сравнение Alipay и WeChat Pay"
                     width={750}
                     height={420}

@@ -19,10 +19,14 @@ export const NAV = [
 export const GUIDES = [
   { tag: 'Alipay', t: 'Как установить, верифицировать и пользоваться Alipay', m: '12 мин', img: '/assets/covers/alipay-setup.jpg', href: '/guides/alipay' },
   { tag: 'Alipay', t: 'Как снять блокировку Alipay', m: '4 мин', img: '/assets/alipay-unblock/cover.png', href: '/guides/alipay-unblock' },
-  { tag: 'Poizon', t: 'Как заказать товары с Poizon: полная инструкция', m: '12 мин', img: '/assets/covers/poizon.jpg', href: '/guides/poizon' },
+  { tag: 'Alipay', t: 'Как платить через Alipay в Китае', m: '9 мин', img: '/assets/alipay-china/01-hero.jpg', href: '/guides/alipay-china' },
   { tag: 'Т-Банк', t: 'Как перевести деньги через Т-Банк', m: '3 мин', img: '/assets/covers/tbank.jpg', href: '/guides/tbank' },
+  { tag: 'Poizon', t: 'Как заказать товары с Poizon: полная инструкция', m: '12 мин', img: '/assets/covers/poizon.jpg', href: '/guides/poizon' },
   { tag: 'Taobao', t: 'Как заказать товары с Taobao: пошаговая инструкция', m: '12 мин', img: '/assets/covers/taobao.jpg', href: '/guides/taobao' },
+  { tag: 'Поездки в Китай', t: 'Как оплачивать метро в Китае через Alipay', m: '8 мин', img: '/assets/china-metro/hero.png', href: '/guides/china-metro' },
+  { tag: 'Поездки в Китай', t: 'Как заказать такси в Китае: гид по DiDi', m: '8 мин', img: '/assets/china-taxi/01-hero.png', href: '/guides/china-taxi' },
   { tag: 'Поездки в Китай', t: 'Велосипеды и мопеды в Китае: как арендовать', m: '6 мин', img: '/assets/covers/bikes.jpg', href: '/guides/china-bikes' },
+  { tag: 'Поездки в Китай', t: '50 вещей о Китае, которые стоит знать', m: '18 мин', img: '/assets/china-50-things/hero.jpg', href: '/guides/china-50-things' },
 ]
 
 const MAT_URL = '/materials'
@@ -91,7 +95,7 @@ export function Header({ onMenu, page = 'home' }: { onMenu: () => void; page?: '
       <header className={'hdr' + (small ? ' small' : '')}>
         <div className="wrap hdr-in">
           <Link href="/#top" className="logo">
-            <Image src="/assets/logo-mark.png" alt="" width={34} height={34} />
+            <Image src="/assets/logo-mark.png" alt="" aria-hidden="true" width={34} height={34} />
             <span>
               ALIPAY<em>FAST</em>
             </span>
@@ -124,7 +128,7 @@ export function Header({ onMenu, page = 'home' }: { onMenu: () => void; page?: '
                    {GUIDES.map((g, i) => (
                      <Link key={i} href={g.href} className="md-c">
                        <div className="md-img">
-                         <Image src={g.img} alt="" width={320} height={200} />
+                         <Image src={g.img} alt={`Обложка: ${g.t}`} width={320} height={200} />
                        </div>
                        <span className="md-tag">
                          {g.tag} · {g.m}

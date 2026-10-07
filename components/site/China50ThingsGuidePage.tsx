@@ -56,9 +56,6 @@ export function China50ThingsGuidePage() {
     <main className="gp">
       <section className="gp-hero">
         <div className="wrap">
-          <Link href="/#top" className="gp-back">
-            ← Вернуться на главную
-          </Link>
           <div className="gp-hero-content">
             <div>
               <h1>Путешествуете в Китай из России: 50 вещей, которые нужно знать в 2026 году</h1>
@@ -641,7 +638,7 @@ export function China50ThingsGuidePage() {
                       а персонал отеля подскажет ближайший магазин.
                     </p>
                     <Shot
-                      src="/assets/china-50-things/miniso.png"
+                      src="/assets/china-50-things/miniso.webp"
                       alt="Магазин Miniso с товарами для дома и мелочами"
                       width={797}
                       height={531}
@@ -753,7 +750,7 @@ export function China50ThingsGuidePage() {
                       это часть страны.
                     </p>
                     <Shot
-                      src="/assets/china-50-things/fastfood.png"
+                      src="/assets/china-50-things/fastfood.webp"
                       alt="Вывески международных сетей быстрого питания в Китае"
                       width={1000}
                       height={666}

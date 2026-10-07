@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { TgIcon, fmt } from './shared'
 import type { CalcState } from './Calculator'
+import { COMPANY } from '@/lib/company'
 
 export function Footer() {
   return (
@@ -14,8 +15,8 @@ export function Footer() {
           <div className="ft-big">
             ALIPAY<em>FAST</em>
           </div>
-          <a className="ft-qr" href="https://t.me/alipayfast" target="_blank">
-            <Image src="/assets/qr.png" alt="QR Telegram" width={120} height={120} />
+          <a className="ft-qr" href={COMPANY.telegram} target="_blank" rel="noopener noreferrer">
+            <Image src="/assets/qr.webp" alt="QR Telegram" width={120} height={120} />
             <span>
               Курс каждый день
               <br />
@@ -24,6 +25,32 @@ export function Footer() {
               @alipayfast
             </span>
           </a>
+        </div>
+        <div className="ft-contacts">
+          <div>
+            <span className="ft-lbl">Офис</span>
+            <address>
+              {COMPANY.street}
+              <br />
+              {COMPANY.locality}, {COMPANY.postalCode}
+            </address>
+          </div>
+          <div>
+            <span className="ft-lbl">Связаться</span>
+            <p>
+              <a href={`tel:${COMPANY.phoneRaw}`}>{COMPANY.phone}</a>
+              <br />
+              <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
+            </p>
+          </div>
+          <div>
+            <span className="ft-lbl">Часы работы</span>
+            <p>
+              Пн–Пт 10:00–19:00
+              <br />
+              Сб 11:00–17:00, Вс выходной
+            </p>
+          </div>
         </div>
         <div className="ft">
           <span>© 2026 AlipayFast · Обмен рублей на юани · Владивосток</span>
@@ -70,7 +97,7 @@ export function MobileBar({ calc }: { calc: CalcState | null }) {
           {fmt(calc.cny, 0)} <em>¥</em>
         </b>
       </div>
-      <a href="https://t.me/alipayfast" target="_blank" className="mbar-tg" aria-label="Telegram">
+      <a href={COMPANY.telegram} target="_blank" rel="noopener noreferrer" className="mbar-tg" aria-label="Telegram">
         <TgIcon size={20} />
       </a>
       <a href="#calc" className="btn btn-red btn-sm">

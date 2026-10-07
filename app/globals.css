@@ -665,3 +665,6 @@ body[data-theme="ink"] .topbar{background:#000}
 .lg-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin:0}
 .lg-list li{position:relative;padding-left:20px;font-size:15px;line-height:1.75;color:color-mix(in oklab,var(--ink) 82%,transparent)}
 .lg-list li::before{content:'';position:absolute;left:0;top:10px;width:6px;height:6px;background:var(--red)}
+
+.office-map{margin-top:24px;border:1.5px solid var(--line);background:#fff}
+.office-map iframe{filter:grayscale(.15)}

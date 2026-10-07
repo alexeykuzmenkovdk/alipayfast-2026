@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Calculator, type CalcState, type OrderPayload } from './Calculator'
+import { COMPANY, FULL_ADDRESS, OFFICE_MAP_SRC } from '@/lib/company'
+import { FAQ } from '@/lib/seo-faq'
 
 export function CalcSection({
   onOrder,
@@ -104,7 +106,7 @@ export function How() {
         </div>
         <div className="how">
           <div className="how-img">
-            <Image src="/assets/c-envelope-white.png" alt="" fill sizes="(max-width: 900px) 100vw, 40vw" className="multiply" />
+            <Image src="/assets/c-envelope-white.webp" alt="" fill sizes="(max-width: 900px) 100vw, 40vw" className="multiply" />
             <div className="big">0{on + 1}</div>
           </div>
           <div className="how-list">
@@ -217,7 +219,7 @@ export function Office() {
     <section className="sec" id="office" style={{ paddingTop: 0 }}>
       <div className="wrap office">
         <div className="office-img reveal">
-          <Image src="/assets/c-wallet.png" alt="" fill sizes="(max-width: 900px) 100vw, 45vw" />
+          <Image src="/assets/c-wallet.webp" alt="" fill sizes="(max-width: 900px) 100vw, 45vw" />
           <div className="open-badge">
             <span className={'dot' + (open ? '' : ' closed')}></span>
             {open ? 'Офис открыт' : 'Офис закрыт · онлайн 24/7'}
@@ -240,8 +242,17 @@ export function Office() {
             <div className="o-cell">
               <h4>Адрес</h4>
               <p>
-                Краснознаменный переулок, д. 5<br />
-                Владивосток
+                {COMPANY.street}
+                <br />
+                {COMPANY.locality}, {COMPANY.postalCode}
+              </p>
+            </div>
+            <div className="o-cell">
+              <h4>Связаться</h4>
+              <p>
+                <a href={`tel:${COMPANY.phoneRaw}`}>{COMPANY.phone}</a>
+                <br />
+                <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
               </p>
             </div>
             <div className="o-cell">
@@ -272,12 +283,28 @@ export function Office() {
             </div>
           </div>
           <div className="office-ctas">
-            <a className="btn btn-ink" href="https://yandex.ru/maps/-/CDqZQXK9" target="_blank">
+            <a
+              className="btn btn-ink"
+              href={`https://yandex.ru/maps/?text=${encodeURIComponent(FULL_ADDRESS)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Построить маршрут →
             </a>
-            <a className="btn btn-line" href="https://t.me/alipayfast" target="_blank">
+            <a className="btn btn-line" href={COMPANY.telegram} target="_blank" rel="noopener noreferrer">
               Договориться о встрече
             </a>
+          </div>
+
+          <div className="office-map">
+            <iframe
+              src={OFFICE_MAP_SRC}
+              title={`${COMPANY.name} на карте: ${FULL_ADDRESS}`}
+              width="100%"
+              height="320"
+              loading="lazy"
+              style={{ border: 0, display: 'block' }}
+            />
           </div>
         </div>
       </div>
@@ -351,18 +378,7 @@ export function Reviews() {
 }
 
 export function Faq() {
-  const Q: [string, string][] = [
-    ['Как быстро происходит пополнение?', 'В среднем 15 минут после подтверждения оплаты. В часы пик — до 30 минут.'],
-    [
-      'Какие способы оплаты вы принимаете?',
-      'Только переводы из приложения Т-Банк — так быстрее и безопаснее. Во Владивостоке можно обменять наличные в офисе.',
-    ],
-    ['Есть ли минимальная сумма?', 'Минимум — 3 000 ₽, сумма кратна 1 000 ₽ (3 000, 4 000, 5 000…).'],
-    ['Какая комиссия?', 'Комиссия уже включена в курс. Никаких скрытых платежей — вы видите итог в калькуляторе.'],
-    ['Нужно ли регистрироваться на сайте?', 'Нет. Достаточно написать нам или оставить заявку через калькулятор.'],
-    ['Как узнать текущий курс?', 'Актуальный курс всегда в шапке сайта и в калькуляторе. Также публикуем его в Telegram-канале.'],
-    ['Это безопасно?', 'Мы работаем открыто, у нас есть офис во Владивостоке и более тысячи успешных операций.'],
-  ]
+  const Q = FAQ.map((item) => [item.q, item.a] as [string, string])
   const [open, setOpen] = useState(0)
 
   return (
@@ -376,7 +392,7 @@ export function Faq() {
             вопросы
           </h2>
           <div className="faq-art">
-            <Image src="/assets/c-coin.png" alt="" width={320} height={320} className="multiply" />
+            <Image src="/assets/c-coin.webp" alt="" width={320} height={320} className="multiply" />
           </div>
         </div>
         <div className="faq">
@@ -433,7 +449,7 @@ export function Contact() {
           </div>
         </div>
         <div className="contact-r">
-          <Image src="/assets/c-note.png" alt="" fill sizes="(max-width: 900px) 100vw, 45vw" style={{ objectFit: 'cover', objectPosition: '50% 50%' }} />
+          <Image src="/assets/c-note.webp" alt="" fill sizes="(max-width: 900px) 100vw, 45vw" style={{ objectFit: 'cover', objectPosition: '50% 50%' }} />
         </div>
       </div>
     </section>

@@ -5,9 +5,9 @@ import Image from 'next/image'
 import { useRates } from './rates-context'
 
 const HERO_IMG: Record<string, string> = {
-  coin: '/assets/c-coin.png',
-  envelope: '/assets/c-envelope.png',
-  wallet: '/assets/c-wallet.png',
+  coin: '/assets/c-coin.webp',
+  envelope: '/assets/c-envelope.webp',
+  wallet: '/assets/c-wallet.webp',
 }
 
 export function Hero({ variant = 'hongbao' }: { variant?: 'hongbao' | 'coin' | 'envelope' | 'wallet' }) {
@@ -50,7 +50,7 @@ export function Hero({ variant = 'hongbao' }: { variant?: 'hongbao' | 'coin' | '
             {variant === 'hongbao' ? (
               <Hongbao bestRate={bestRate} />
             ) : (
-              <Image src={HERO_IMG[variant]} alt="" fill sizes="(max-width: 900px) 100vw, 40vw" className="multiply" />
+              <Image src={HERO_IMG[variant]} alt="Пополнение Alipay юанями: обмен рублей на юани" fill sizes="(max-width: 900px) 100vw, 40vw" className="multiply" />
             )}
           </div>
         </div>

@@ -57,9 +57,6 @@ export function ChinaTaxiGuidePage() {
     <main className="gp">
       <section className="gp-hero">
         <div className="wrap">
-          <Link href="/#top" className="gp-back">
-            ← Вернуться на главную
-          </Link>
           <div className="gp-hero-content">
             <div>
               <h1>Как заказать такси в Китае: гид по DiDi для туриста</h1>
@@ -163,7 +160,7 @@ export function ChinaTaxiGuidePage() {
                     приложении гораздо проще.
                   </p>
                   <Shot
-                    src="/assets/china-taxi/03-setup.png"
+                    src="/assets/china-taxi/03-setup.webp"
                     alt="Установка и настройка DiDi"
                     width={943}
                     height={662}
@@ -236,7 +233,7 @@ export function ChinaTaxiGuidePage() {
                     </li>
                   </ol>
                   <Shot
-                    src="/assets/china-taxi/05-booking.png"
+                    src="/assets/china-taxi/05-booking.webp"
                     alt="Процесс заказа поездки в DiDi"
                     width={921}
                     height={762}
@@ -326,7 +323,7 @@ export function ChinaTaxiGuidePage() {
                     <strong>AlipayFast</strong> решает вопрос за несколько минут.
                   </p>
                   <Shot
-                    src="/assets/china-taxi/06-alipay.png"
+                    src="/assets/china-taxi/06-alipay.webp"
                     alt="Заказ DiDi через Alipay"
                     width={1280}
                     height={1422}
@@ -348,7 +345,7 @@ export function ChinaTaxiGuidePage() {
                     Premier.
                   </p>
                   <Shot
-                    src="/assets/china-taxi/07-wechat.png"
+                    src="/assets/china-taxi/07-wechat.webp"
                     alt="Заказ DiDi через WeChat"
                     width={1280}
                     height={904}
@@ -404,7 +401,7 @@ export function ChinaTaxiGuidePage() {
                     электромобили.
                   </p>
                   <Shot
-                    src="/assets/china-taxi/08-car-types.png"
+                    src="/assets/china-taxi/08-car-types.webp"
                     alt="Выбор типа машины в DiDi"
                     width={942}
                     height={750}

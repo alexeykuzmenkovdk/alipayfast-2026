@@ -169,7 +169,7 @@ export function MaterialsPage() {
           <article className="mt-feat">
             <div className="mt-feat-img">
               {feat.img ? (
-                <Image src={feat.img} alt="" width={600} height={420} priority />
+                <Image src={feat.img} alt={`Обложка: ${feat.t}`} width={600} height={420} priority />
               ) : (
                 <div
                   className="ph"
@@ -216,7 +216,7 @@ export function MaterialsPage() {
             const body = (
               <>
                 <div className="mt-card-img">
-                  {p.img ? <Image src={p.img} alt="" width={480} height={360} /> : <div className="ph">{p.ph}</div>}
+                  {p.img ? <Image src={p.img} alt={`Обложка: ${p.t}`} width={480} height={360} /> : <div className="ph">{p.ph}</div>}
                   <span className="num">{p.c}</span>
                 </div>
                 <h3>{p.t}</h3>

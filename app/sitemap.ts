@@ -1,32 +1,66 @@
 import type { MetadataRoute } from 'next'
+import { COMPANY } from '@/lib/company'
+import { lastModified } from '@/lib/dates'
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alipayfast.ru'
+// lastmod считается по реальным датам: коммит файла страницы и её гайд-компонента,
+// для незакоммиченных правок — время изменения на диске.
 
-const guides = [
-  '/guides/alipay',
-  '/guides/alipay-unblock',
-  '/guides/alipay-china',
-  '/guides/tbank',
-  '/guides/poizon',
-  '/guides/taobao',
-  '/guides/china-bikes',
-  '/guides/china-metro',
-  '/guides/china-taxi',
-  '/guides/china-50-things',
+const STATIC: { path: string; files: string[]; priority: number; changeFrequency: 'daily' | 'weekly' | 'yearly' }[] = [
+  {
+    path: '/',
+    files: ['app/page.tsx', 'components/site/Hero.tsx', 'components/site/Sections.tsx', 'components/site/Calculator.tsx'],
+    priority: 1,
+    changeFrequency: 'daily',
+  },
+  {
+    path: '/materials',
+    files: ['app/materials/page.tsx', 'components/site/MaterialsPage.tsx'],
+    priority: 0.7,
+    changeFrequency: 'weekly',
+  },
+  {
+    path: '/terms',
+    files: ['app/terms/page.tsx', 'components/site/TermsPage.tsx'],
+    priority: 0.3,
+    changeFrequency: 'yearly',
+  },
+  {
+    path: '/privacy',
+    files: ['app/privacy/page.tsx', 'components/site/PrivacyPage.tsx'],
+    priority: 0.3,
+    changeFrequency: 'yearly',
+  },
+]
+
+const GUIDES: { path: string; slug: string; component: string }[] = [
+  { path: '/guides/alipay', slug: 'alipay', component: 'AlipayGuidePage' },
+  { path: '/guides/alipay-unblock', slug: 'alipay-unblock', component: 'AlipayUnblockGuidePage' },
+  { path: '/guides/alipay-china', slug: 'alipay-china', component: 'AlipayChinaGuidePage' },
+  { path: '/guides/tbank', slug: 'tbank', component: 'GuidePage' },
+  { path: '/guides/poizon', slug: 'poizon', component: 'PoizonGuidePage' },
+  { path: '/guides/taobao', slug: 'taobao', component: 'TaobaoGuidePage' },
+  { path: '/guides/china-bikes', slug: 'china-bikes', component: 'ChinaBikesGuidePage' },
+  { path: '/guides/china-metro', slug: 'china-metro', component: 'ChinaMetroGuidePage' },
+  { path: '/guides/china-taxi', slug: 'china-taxi', component: 'ChinaTaxiGuidePage' },
+  { path: '/guides/china-50-things', slug: 'china-50-things', component: 'China50ThingsGuidePage' },
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date()
   return [
-    { url: `${baseUrl}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
-    { url: `${baseUrl}/materials`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    ...guides.map((path) => ({
-      url: `${baseUrl}${path}`,
-      lastModified: now,
+    ...STATIC.map((page) => ({
+      url: `${COMPANY.url}${page.path === '/' ? '/' : page.path}`,
+      lastModified: lastModified(page.files),
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+    })),
+    ...GUIDES.map((guide) => ({
+      url: `${COMPANY.url}${guide.path}`,
+      lastModified: lastModified([
+        `app/guides/${guide.slug}/page.tsx`,
+        `components/site/${guide.component}.tsx`,
+      ]),
       changeFrequency: 'monthly' as const,
       priority: 0.6,
     })),
-    { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ]
 }

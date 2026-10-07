@@ -53,9 +53,6 @@ export function ChinaBikesGuidePage() {
     <main className="gp">
       <section className="gp-hero">
         <div className="wrap">
-          <Link href="/#top" className="gp-back">
-            ← Вернуться на главную
-          </Link>
           <div className="gp-hero-content">
             <div>
               <h1>Велосипеды и мопеды в Китае: как арендовать туристу</h1>
