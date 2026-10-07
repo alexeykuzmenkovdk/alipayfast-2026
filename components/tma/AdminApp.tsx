@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ORDER_STATUS, STEP_STATUS, fmtCny, fmtDateTime, fmtRub, fmtTime, type Order, type OrderMessage, type PaymentStep } from './types'
+import { ORDER_STATUS, STEP_STATUS, fmtCny, fmtDateTime, fmtRub, fmtTime, isImageUrl, type Order, type OrderMessage, type PaymentStep } from './types'
 import { useTelegram } from './useTelegram'
 
 interface Stats {
@@ -76,11 +76,26 @@ export function AdminApp() {
     amountRub: '',
     method: 'SBP',
     requisiteValue: '',
-    bankName: 'Т-Банк',
+    bankName: '',
     receiptEmail: '',
   })
+  // Подтверждение перед отправкой реквизитов: оператор видит ровно то,
+  // что уйдёт клиенту, и не отправляет чужие/пустые данные по ошибке.
+  const [confirmStep, setConfirmStep] = useState(false)
+  // Последние реквизиты оператора — подставляются ЯВНО по кнопке, не молча.
+  const [lastReqs, setLastReqs] = useState<{ bankName: string; receiptEmail: string } | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('adm-last-reqs')
+      if (raw) setLastReqs(JSON.parse(raw))
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   const chatRef = useRef<HTMLDivElement>(null)
+  const chatFileRef = useRef<HTMLInputElement>(null)
 
   const selected = useMemo(() => orders.find((order) => order.id === selectedId), [orders, selectedId])
 
@@ -150,6 +165,13 @@ export function AdminApp() {
     if (node) node.scrollTop = node.scrollHeight
   }, [messages.length])
 
+  // При переключении заявки сбрасываем экран подтверждения и черновик реквизитов,
+  // чтобы не отправить данные одной сделки в другую.
+  useEffect(() => {
+    setConfirmStep(false)
+    setStepForm({ amountRub: '', method: 'SBP', requisiteValue: '', bankName: '', receiptEmail: '' })
+  }, [selectedId])
+
   const act = async (path: string, method: 'POST', payload?: unknown, okText?: string) => {
     setBusy(true)
     setNotice(null)
@@ -176,26 +198,41 @@ export function AdminApp() {
     }
   }
 
-  const sendStep = async (event: React.FormEvent) => {
+  const reviewStep = (event: React.FormEvent) => {
     event.preventDefault()
-    if (!selectedId || !stepForm.amountRub || !stepForm.requisiteValue) {
-      setNotice({ kind: 'err', text: 'Заполните сумму и реквизит' })
+    if (!selectedId || !stepForm.amountRub || !stepForm.requisiteValue || !stepForm.bankName.trim()) {
+      setNotice({ kind: 'err', text: 'Заполните сумму, реквизит и банк получателя' })
       return
     }
+    setNotice(null)
+    setConfirmStep(true)
+  }
+
+  const confirmSendStep = async () => {
+    if (!selectedId) return
     const ok = await act(
       `/api/admin/orders/${selectedId}/steps`,
       'POST',
       {
         amountRub: Number(stepForm.amountRub),
         method: stepForm.method,
-        requisiteValue: stepForm.requisiteValue,
-        bankName: stepForm.bankName,
-        receiptEmail: stepForm.receiptEmail,
+        requisiteValue: stepForm.requisiteValue.trim(),
+        bankName: stepForm.bankName.trim(),
+        receiptEmail: stepForm.receiptEmail.trim(),
       },
       'Реквизиты отправлены клиенту',
     )
     if (ok) {
-      setStepForm({ amountRub: '', method: 'SBP', requisiteValue: '', bankName: 'Т-Банк', receiptEmail: '' })
+      // Запоминаем банк и email, чтобы в следующий раз подставить ПО КНОПКЕ.
+      try {
+        const reqs = { bankName: stepForm.bankName.trim(), receiptEmail: stepForm.receiptEmail.trim() }
+        window.localStorage.setItem('adm-last-reqs', JSON.stringify(reqs))
+        setLastReqs(reqs)
+      } catch {
+        /* ignore */
+      }
+      setStepForm({ amountRub: '', method: 'SBP', requisiteValue: '', bankName: '', receiptEmail: '' })
+      setConfirmStep(false)
       await loadDeal(selectedId)
       await loadOrders()
     }
@@ -207,6 +244,45 @@ export function AdminApp() {
     if (ok) {
       setChatText('')
       await loadDeal(selectedId)
+    }
+  }
+
+  // Оператор может прислать клиенту картинку (QR, инструкцию) или файл.
+  const uploadFile = async (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await fetch('/api/uploads', { method: 'POST', headers: telegram.headers, body: form })
+    if (res.status === 401) {
+      setDenied(await deniedReasonFrom(res))
+      return null
+    }
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.url as string
+  }
+
+  const sendChatFile = async (file: File) => {
+    if (!selectedId) return
+    setBusy(true)
+    setNotice(null)
+    try {
+      const url = await uploadFile(file)
+      if (!url) {
+        setNotice({ kind: 'err', text: 'Не удалось загрузить файл' })
+        return
+      }
+      const res = await fetch(`/api/admin/orders/${selectedId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...telegram.headers },
+        body: JSON.stringify({ fileUrl: url }),
+      })
+      if (res.ok) {
+        await loadDeal(selectedId)
+      } else {
+        setNotice({ kind: 'err', text: 'Файл не отправился' })
+      }
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -373,64 +449,126 @@ export function AdminApp() {
               </div>
             </section>
 
-            {tab === 'active' && (
+            {tab === 'active' && !confirmStep && (
               <section className="tma-card">
-                <b className="tma-step-title">Прислать реквизиты</b>
-                <form onSubmit={sendStep} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <b className="tma-step-title">Прислать реквизиты клиенту</b>
+                <p className="tma-sub">
+                  Проверьте каждое поле — клиент оплатит ровно то, что вы отправите. Перед отправкой будет
+                  экран подтверждения.
+                </p>
+                <form onSubmit={reviewStep} className="adm-form">
                   <div className="tma-row">
-                    <label className="tma-label" style={{ flex: 1 }}>
-                      <span>Сумма, ₽</span>
+                    <label className="tma-label adm-field">
+                      <span>Сумма к оплате, ₽ *</span>
                       <input
                         className="tma-input"
-                        value={stepForm.amountRub}
+                        value={stepForm.amountRub ? Number(stepForm.amountRub).toLocaleString('ru-RU') : ''}
                         inputMode="numeric"
+                        placeholder="например, 50 000"
                         onChange={(event) => setStepForm((prev) => ({ ...prev, amountRub: event.target.value.replace(/[^\d]/g, '') }))}
                       />
                     </label>
-                    <label className="tma-label" style={{ flex: 1 }}>
-                      <span>Метод</span>
+                    <label className="tma-label adm-field">
+                      <span>Способ оплаты</span>
                       <select
                         className="tma-input"
                         value={stepForm.method}
                         onChange={(event) => setStepForm((prev) => ({ ...prev, method: event.target.value }))}
                       >
-                        <option value="SBP">СБП</option>
+                        <option value="SBP">СБП (по телефону)</option>
                         <option value="CARD">Карта</option>
                       </select>
                     </label>
                   </div>
                   <label className="tma-label">
-                    <span>Реквизит (телефон или карта)</span>
+                    <span>{stepForm.method === 'CARD' ? 'Номер карты получателя *' : 'Телефон получателя (СБП) *'}</span>
                     <input
                       className="tma-input"
                       value={stepForm.requisiteValue}
-                      placeholder="+7 999 000-00-00"
+                      placeholder={stepForm.method === 'CARD' ? 'Введите номер карты' : 'Введите номер телефона'}
                       onChange={(event) => setStepForm((prev) => ({ ...prev, requisiteValue: event.target.value }))}
                     />
                   </label>
                   <div className="tma-row">
-                    <label className="tma-label" style={{ flex: 1 }}>
-                      <span>Банк</span>
+                    <label className="tma-label adm-field">
+                      <span>Банк получателя *</span>
                       <input
                         className="tma-input"
                         value={stepForm.bankName}
+                        placeholder="Введите банк"
                         onChange={(event) => setStepForm((prev) => ({ ...prev, bankName: event.target.value }))}
                       />
                     </label>
-                    <label className="tma-label" style={{ flex: 1 }}>
+                    <label className="tma-label adm-field">
                       <span>Email для чека</span>
                       <input
                         className="tma-input"
                         value={stepForm.receiptEmail}
-                        placeholder="pay@alipayfast.ru"
+                        placeholder="Введите email (необязательно)"
                         onChange={(event) => setStepForm((prev) => ({ ...prev, receiptEmail: event.target.value }))}
                       />
                     </label>
                   </div>
+
+                  {lastReqs && (lastReqs.bankName || lastReqs.receiptEmail) && (
+                    <button
+                      type="button"
+                      className="adm-fill-last"
+                      onClick={() =>
+                        setStepForm((prev) => ({
+                          ...prev,
+                          bankName: prev.bankName || lastReqs?.bankName || '',
+                          receiptEmail: prev.receiptEmail || lastReqs?.receiptEmail || '',
+                        }))
+                      }
+                    >
+                      ↻ Подставить прошлый банк{lastReqs.bankName ? ` (${lastReqs.bankName})` : ''}
+                      {lastReqs.receiptEmail ? ` и email` : ''}
+                    </button>
+                  )}
+
+                  <div className="tma-hint">Поля со звёздочкой (*) обязательны.</div>
                   <button className="tma-btn" type="submit" disabled={busy}>
-                    {busy ? 'Отправляем…' : 'Отправить клиенту'}
+                    Проверить и отправить →
                   </button>
                 </form>
+              </section>
+            )}
+
+            {tab === 'active' && confirmStep && (
+              <section className="tma-card adm-confirm">
+                <b className="tma-step-title">Подтвердите реквизиты</b>
+                <p className="tma-sub">Клиент получит именно эти данные. Проверьте перед отправкой.</p>
+                <div className="adm-confirm-list">
+                  <div className="adm-confirm-row">
+                    <span>Сумма к оплате</span>
+                    <b>{fmtRub(Number(stepForm.amountRub))}</b>
+                  </div>
+                  <div className="adm-confirm-row">
+                    <span>Способ</span>
+                    <b>{stepForm.method === 'CARD' ? 'Карта' : 'СБП (по телефону)'}</b>
+                  </div>
+                  <div className="adm-confirm-row">
+                    <span>{stepForm.method === 'CARD' ? 'Карта получателя' : 'Телефон получателя'}</span>
+                    <b>{stepForm.requisiteValue.trim()}</b>
+                  </div>
+                  <div className="adm-confirm-row">
+                    <span>Банк получателя</span>
+                    <b>{stepForm.bankName.trim()}</b>
+                  </div>
+                  <div className="adm-confirm-row">
+                    <span>Email для чека</span>
+                    <b>{stepForm.receiptEmail.trim() || '— не указан —'}</b>
+                  </div>
+                </div>
+                <div className="tma-row">
+                  <button className="tma-btn ghost" type="button" disabled={busy} onClick={() => setConfirmStep(false)}>
+                    ← Изменить
+                  </button>
+                  <button className="tma-btn" type="button" disabled={busy} onClick={confirmSendStep}>
+                    {busy ? 'Отправляем…' : 'Отправить клиенту'}
+                  </button>
+                </div>
               </section>
             )}
 
@@ -485,13 +623,43 @@ export function AdminApp() {
                         <div className="tma-msg meta">
                           {message.senderRole === 'admin' ? 'Оператор' : 'Клиент'} · {fmtTime(message.createdAt)}
                         </div>
-                        {message.text}
+                        {message.fileUrl && isImageUrl(message.fileUrl) && (
+                          <a className="tma-msg-img" href={message.fileUrl} target="_blank" rel="noreferrer">
+                            <img src={message.fileUrl} alt="Вложение" loading="lazy" />
+                          </a>
+                        )}
+                        {message.fileUrl && !isImageUrl(message.fileUrl) && (
+                          <a className="tma-msg-file" href={message.fileUrl} target="_blank" rel="noreferrer">
+                            📎 Открыть файл
+                          </a>
+                        )}
+                        {message.text && <div className="tma-msg-text">{message.text}</div>}
                       </div>
                     ),
                   )
                 )}
               </div>
               <div className="tma-chat-input">
+                <input
+                  ref={chatFileRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) sendChatFile(file)
+                    event.target.value = ''
+                  }}
+                />
+                <button
+                  className="tma-chat-attach"
+                  type="button"
+                  disabled={busy}
+                  title="Прикрепить картинку или файл"
+                  onClick={() => chatFileRef.current?.click()}
+                >
+                  📎
+                </button>
                 <textarea
                   className="tma-textarea"
                   rows={2}

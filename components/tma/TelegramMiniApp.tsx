@@ -263,20 +263,47 @@ export function TelegramMiniApp() {
     }
   }
 
-  const sendMessage = async (text: string) => {
-    if (!order || !text.trim()) return
+  const sendMessage = async (text: string, fileUrl?: string) => {
+    const trimmed = text.trim()
+    if (!order || (!trimmed && !fileUrl)) return
     setBusy(true)
     try {
       const res = await fetch(`/api/orders/${order.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...apiHeaders },
-        body: JSON.stringify({ text: text.trim() }),
+        body: JSON.stringify({ text: trimmed || undefined, fileUrl }),
       })
       if (res.ok) {
         const data = await res.json()
         setMessages((prev) => [...prev, data.message])
       } else {
         setNotice({ kind: 'err', text: 'Сообщение не отправилось, попробуйте ещё раз.' })
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Загрузка вложения для чата: клиент может прислать картинку/файл оператору.
+  const sendChatFile = async (file: File) => {
+    if (!order) return
+    setBusy(true)
+    try {
+      const url = await uploadFile(file)
+      if (!url) {
+        setNotice({ kind: 'err', text: 'Не удалось загрузить файл.' })
+        return
+      }
+      const res = await fetch(`/api/orders/${order.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...apiHeaders },
+        body: JSON.stringify({ fileUrl: url }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setMessages((prev) => [...prev, data.message])
+      } else {
+        setNotice({ kind: 'err', text: 'Файл не отправился, попробуйте ещё раз.' })
       }
     } finally {
       setBusy(false)
@@ -337,6 +364,7 @@ export function TelegramMiniApp() {
               busy={busy}
               receiptUrl={receiptUrl}
               onSend={sendMessage}
+              onSendFile={sendChatFile}
               onCancel={cancelOrder}
               onReceipt={handleReceipt}
               onMarkPaid={markPaid}
@@ -380,12 +408,12 @@ export function TelegramMiniApp() {
                 </label>
 
                 <div className="tma-rate-box">
-                  <div className="tma-rate-line">
+                  <div className="tma-rate-line tma-rate-main">
                     <span>Ваш курс</span>
                     <b>{currentRate.toFixed(2)} ₽</b>
                   </div>
-                  <div className="tma-hint">Курс зависит от суммы:</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div className="tma-hint">Чем крупнее сумма — тем выгоднее курс:</div>
+                  <div className="tma-rate-tiers">
                     {rates.tiers.map((tier) => (
                       <div key={tier.label} className="tma-rate-line">
                         <span>{tier.label}</span>

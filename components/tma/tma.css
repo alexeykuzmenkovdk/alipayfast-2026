@@ -271,6 +271,21 @@
 .tma-rate-line b {
   font-weight: 600;
 }
+.tma-rate-main {
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.tma-rate-main b {
+  font-size: 18px;
+  color: var(--red);
+}
+.tma-rate-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .tma-hint {
   font-family: var(--mono);
   font-size: 11px;
@@ -690,12 +705,66 @@
   background: #fff;
   min-height: 56px;
   max-height: 140px;
+  flex: 1;
+  min-width: 0;
 }
 .tma-chat-input .tma-btn {
   width: auto;
   height: 56px;
   flex: none;
   padding: 0 18px;
+}
+
+/* кнопка прикрепления файла в чат */
+.tma-chat-attach {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  line-height: 1;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  transition: border-color 0.15s, background 0.15s;
+}
+.tma-chat-attach:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--paper-2);
+}
+.tma-chat-attach:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* вложения внутри сообщения чата */
+.tma-msg-text {
+  margin-top: 2px;
+}
+.tma-msg-img {
+  display: block;
+  margin: 2px 0;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  max-width: 240px;
+}
+.tma-msg.admin .tma-msg-img {
+  border-color: rgba(242, 234, 219, 0.4);
+}
+.tma-msg-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: cover;
+}
+.tma-msg-file {
+  display: inline-block;
+  margin: 2px 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: underline;
+  color: inherit;
 }
 
 /* системное сообщение (приветствие с правилами) */
@@ -806,6 +875,84 @@
   white-space: nowrap;
 }
 
+/* ── Форма реквизитов оператора ───────────────────────────── */
+
+.adm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adm-form .tma-row {
+  gap: 12px;
+}
+.adm-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.adm-field .tma-input {
+  width: 100%;
+}
+/* обязательная звёздочка заметнее */
+.adm-form .tma-label span {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* подстановка прошлых реквизитов — явная кнопка, не молчаливый placeholder */
+.adm-fill-last {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--red);
+  border: 1px dashed var(--red);
+  background: color-mix(in oklab, var(--red) 5%, #fff);
+  padding: 7px 10px;
+  text-align: left;
+  max-width: 100%;
+  transition: background 0.15s;
+}
+.adm-fill-last:hover {
+  background: color-mix(in oklab, var(--red) 10%, #fff);
+}
+
+/* экран подтверждения реквизитов */
+.adm-confirm {
+  border-color: var(--red);
+}
+.adm-confirm-list {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--ink);
+  background: #fff;
+}
+.adm-confirm-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.adm-confirm-row:last-child {
+  border-bottom: 0;
+}
+.adm-confirm-row > span {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.adm-confirm-row > b {
+  text-align: right;
+  font-size: 15px;
+  font-weight: 600;
+  word-break: break-word;
+  min-width: 0;
+}
+
 @media (max-width: 560px) {
   .tma-tab {
     font-size: 10px;
@@ -813,5 +960,15 @@
   }
   .tma-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  /* на узких экранах поля в ряду не жмём, а переносим — убираем наложения */
+  .tma-row {
+    flex-wrap: wrap;
+  }
+  .tma-row .tma-btn {
+    flex: 1 1 140px;
+  }
+  .adm-field {
+    flex: 1 1 100%;
   }
 }

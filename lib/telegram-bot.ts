@@ -108,3 +108,25 @@ export async function notify(userId: number, text: string, replyMarkup?: unknown
 export function notifyAsync(userId: number, text: string, replyMarkup?: unknown) {
   void notify(userId, text, replyMarkup)
 }
+
+// Превращает ссылку на загрузку (/uploads/..) в абсолютную — Telegram sendPhoto
+// требует публично доступный URL, относительный путь он не примет.
+export function absoluteUploadUrl(url: string) {
+  if (/^https?:\/\//i.test(url)) return url
+  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alipayfast.ru').replace(/\/$/, '')
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
+// Отправка картинки-вложения в Telegram (с подписью). При сбое тихо откатываемся
+// на обычное текстовое уведомление, чтобы получатель хотя бы узнал о сообщении.
+export function notifyPhotoAsync(userId: number, fileUrl: string, caption: string, replyMarkup?: unknown) {
+  if (!isBotConfigured() || !userId) return
+  void (async () => {
+    try {
+      await sendPhoto({ chat_id: userId, photo: absoluteUploadUrl(fileUrl), caption, reply_markup: replyMarkup })
+    } catch (error) {
+      console.error('[TELEGRAM] Не удалось отправить фото, шлём текст:', error)
+      await notify(userId, `${caption}\n${absoluteUploadUrl(fileUrl)}`, replyMarkup)
+    }
+  })()
+}

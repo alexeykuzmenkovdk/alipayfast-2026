@@ -8,6 +8,7 @@ import {
   fmtDateTime,
   fmtRub,
   fmtTime,
+  isImageUrl,
   type Order,
   type OrderMessage,
   type PaymentStep,
@@ -19,7 +20,8 @@ interface DealRoomProps {
   messages: OrderMessage[]
   busy: boolean
   receiptUrl: string | null
-  onSend: (text: string) => void
+  onSend: (text: string, fileUrl?: string) => void
+  onSendFile: (file: File) => void
   onCancel: () => void
   onReceipt: (file: File) => void
   onMarkPaid: () => void
@@ -48,6 +50,7 @@ export function DealRoom({
   busy,
   receiptUrl,
   onSend,
+  onSendFile,
   onCancel,
   onReceipt,
   onMarkPaid,
@@ -58,6 +61,7 @@ export function DealRoom({
   const [confirmCancel, setConfirmCancel] = useState(false)
 
   const chatRef = useRef<HTMLDivElement>(null)
+  const chatFileRef = useRef<HTMLInputElement>(null)
 
   const activeStep = useMemo(
     () => steps.find((step) => step.status === 'WAITING_FOR_PAYMENT' || step.status === 'WAITING_FOR_DETAILS'),
@@ -281,7 +285,17 @@ export function DealRoom({
                   <div className="tma-msg meta">
                     {message.senderRole === 'admin' ? 'Оператор' : 'Вы'} · {fmtTime(message.createdAt)}
                   </div>
-                  {message.text}
+                  {message.fileUrl && isImageUrl(message.fileUrl) && (
+                    <a className="tma-msg-img" href={message.fileUrl} target="_blank" rel="noreferrer">
+                      <img src={message.fileUrl} alt="Вложение" loading="lazy" />
+                    </a>
+                  )}
+                  {message.fileUrl && !isImageUrl(message.fileUrl) && (
+                    <a className="tma-msg-file" href={message.fileUrl} target="_blank" rel="noreferrer">
+                      📎 Открыть файл
+                    </a>
+                  )}
+                  {message.text && <div className="tma-msg-text">{message.text}</div>}
                 </div>
               ),
             )
@@ -289,6 +303,26 @@ export function DealRoom({
         </div>
 
         <div className="tma-chat-input">
+          <input
+            ref={chatFileRef}
+            type="file"
+            accept="image/*,application/pdf"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (file) onSendFile(file)
+              event.target.value = ''
+            }}
+          />
+          <button
+            className="tma-chat-attach"
+            type="button"
+            disabled={busy}
+            title="Прикрепить картинку или файл"
+            onClick={() => chatFileRef.current?.click()}
+          >
+            📎
+          </button>
           <textarea
             className="tma-textarea"
             value={chatText}

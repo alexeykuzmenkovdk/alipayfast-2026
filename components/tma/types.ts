@@ -30,7 +30,13 @@ export interface OrderMessage {
   id: string
   senderRole: 'client' | 'admin' | 'system'
   text?: string
+  fileUrl?: string
   createdAt: string
+}
+
+export function isImageUrl(url: string | undefined): boolean {
+  if (!url) return false
+  return /\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(url)
 }
 
 export interface ArchivedOrder {
