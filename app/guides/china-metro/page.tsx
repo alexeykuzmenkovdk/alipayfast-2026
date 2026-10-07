@@ -9,7 +9,7 @@ export const metadata: Metadata = pageMetadata({
   title: "Метро в Китае: как оплачивать через Alipay",
   description: "Как настроить транспортный QR-код в Alipay для метро и автобусов Китая: выбор проездного, вынос кода на рабочий стол и проход турникетов.",
   path: "/guides/china-metro",
-  image: "/assets/china-metro/hero.png",
+  image: "/assets/covers/metro.jpg",
   type: 'article',
 })
 
@@ -18,7 +18,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "Метро в Китае: как оплачивать через Alipay", description: "Как настроить транспортный QR-код в Alipay для метро и автобусов Китая: выбор проездного, вынос кода на рабочий стол и проход турникетов.", path: "/guides/china-metro", image: "/assets/china-metro/hero.png" })) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "Метро в Китае: как оплачивать через Alipay", description: "Как настроить транспортный QR-код в Alipay для метро и автобусов Китая: выбор проездного, вынос кода на рабочий стол и проход турникетов.", path: "/guides/china-metro", image: "/assets/covers/metro.jpg" })) }}
       />
       <GuideBreadcrumbs title={
         "Как оплачивать метро в Китае"

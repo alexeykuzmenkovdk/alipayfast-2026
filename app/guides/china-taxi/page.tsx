@@ -9,7 +9,7 @@ export const metadata: Metadata = pageMetadata({
   title: "Как заказать такси в Китае: гид по DiDi",
   description: "Пошаговый гид по DiDi: как установить приложение, настроить оплату через Alipay, заказать машину, выбрать тариф, отменить заказ и сколько стоит поездка.",
   path: "/guides/china-taxi",
-  image: "/assets/china-taxi/01-hero.png",
+  image: "/assets/covers/taxi.jpg",
   type: 'article',
 })
 
@@ -18,7 +18,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "Как заказать такси в Китае: гид по DiDi", description: "Пошаговый гид по DiDi: как установить приложение, настроить оплату через Alipay, заказать машину, выбрать тариф, отменить заказ и сколько стоит поездка.", path: "/guides/china-taxi", image: "/assets/china-taxi/01-hero.png" })) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "Как заказать такси в Китае: гид по DiDi", description: "Пошаговый гид по DiDi: как установить приложение, настроить оплату через Alipay, заказать машину, выбрать тариф, отменить заказ и сколько стоит поездка.", path: "/guides/china-taxi", image: "/assets/covers/taxi.jpg" })) }}
       />
       <GuideBreadcrumbs title={
         "Как заказать такси в Китае"

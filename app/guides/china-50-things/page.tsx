@@ -9,7 +9,7 @@ export const metadata: Metadata = pageMetadata({
   title: "50 вещей о Китае: что знать перед поездкой",
   description: "Безвиз, VPN и приложения, российские карты и Alipay, метро, такси, еда и что взять с собой — 50 практичных советов для поездки в Китай.",
   path: "/guides/china-50-things",
-  image: "/assets/china-50-things/hero.jpg",
+  image: "/assets/covers/china-travel-2026.jpg",
   type: 'article',
 })
 
@@ -18,7 +18,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "50 вещей о Китае: что знать перед поездкой", description: "Безвиз, VPN и приложения, российские карты и Alipay, метро, такси, еда и что взять с собой — 50 практичных советов для поездки в Китай.", path: "/guides/china-50-things", image: "/assets/china-50-things/hero.jpg" })) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(articleGraph({ title: "50 вещей о Китае: что знать перед поездкой", description: "Безвиз, VPN и приложения, российские карты и Alipay, метро, такси, еда и что взять с собой — 50 практичных советов для поездки в Китай.", path: "/guides/china-50-things", image: "/assets/covers/china-travel-2026.jpg" })) }}
       />
       <GuideBreadcrumbs title={
         "50 вещей о Китае"

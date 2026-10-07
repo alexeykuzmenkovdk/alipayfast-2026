@@ -29,7 +29,7 @@ export const GUIDES: GuideEntry[] = [
     tag: 'Alipay',
     title: 'Как платить через Alipay в Китае',
     minutes: 9,
-    image: '/assets/alipay-china/01-hero.jpg',
+    image: '/assets/covers/alipay-china.jpg',
   },
   {
     path: '/guides/tbank',
@@ -57,14 +57,14 @@ export const GUIDES: GuideEntry[] = [
     tag: 'Поездки в Китай',
     title: 'Как оплачивать метро в Китае через Alipay',
     minutes: 8,
-    image: '/assets/china-metro/hero.png',
+    image: '/assets/covers/metro.jpg',
   },
   {
     path: '/guides/china-taxi',
     tag: 'Поездки в Китай',
     title: 'Как заказать такси в Китае: гид по DiDi',
     minutes: 8,
-    image: '/assets/china-taxi/01-hero.png',
+    image: '/assets/covers/taxi.jpg',
   },
   {
     path: '/guides/china-bikes',
@@ -78,7 +78,7 @@ export const GUIDES: GuideEntry[] = [
     tag: 'Поездки в Китай',
     title: '50 вещей о Китае, которые стоит знать',
     minutes: 18,
-    image: '/assets/china-50-things/hero.jpg',
+    image: '/assets/covers/china-travel-2026.jpg',
   },
 ]
 
