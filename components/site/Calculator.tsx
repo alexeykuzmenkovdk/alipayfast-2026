@@ -198,7 +198,7 @@ export function Calculator({
           className="hint"
           style={{ marginTop: 0, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}
         >
-          <span>{isManual ? 'Курс установлен вручную' : 'Курс ЦБ РФ + надбавка по сумме'} · фиксируем на 15 минут</span>
+          <span>{isManual ? 'Курс установлен вручную' : 'Курс зависит от суммы'} · фиксируем на 15 минут</span>
           <button className={'upd' + (spin ? ' spin' : '')} onClick={refresh}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" />

@@ -272,7 +272,7 @@ export function RateChart() {
           <span>
             <i style={{ background: 'var(--red)' }}></i>Курс AlipayFast, ₽ за 1 ¥
           </span>
-          <span className="rc-note">{isSynthetic ? 'Данные для прототипа' : 'Курс ЦБ РФ + надбавка'}</span>
+          <span className="rc-note">{isSynthetic ? 'Данные для прототипа' : 'Наш курс'}</span>
         </div>
       </div>
 

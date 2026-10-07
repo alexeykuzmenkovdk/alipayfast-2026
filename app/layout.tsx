@@ -5,7 +5,7 @@ import { RatesProvider } from '@/components/site/rates-context'
 export const metadata: Metadata = {
   title: 'AlipayFast — пополнение Alipay юанями',
   description:
-    'Пополнение Alipay юанями во Владивостоке: курс ЦБ РФ + прозрачная надбавка, без скрытых комиссий. Зачисление за ~15 минут.',
+    'Пополнение Alipay юанями во Владивостоке: выгодный курс без скрытых комиссий. Зачисление за ~15 минут.',
   keywords: ['Alipay', 'пополнение Alipay', 'юани', 'Владивосток', 'обмен рублей на юани', 'Т-Банк'],
   robots: { index: true, follow: true },
 }

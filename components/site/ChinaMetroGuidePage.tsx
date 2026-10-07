@@ -368,8 +368,7 @@ export function ChinaMetroGuidePage() {
             <div className="gp-cta">
               <h2>Едете в Китай?</h2>
               <p>
-                Поможем пополнить Alipay — из него списывается оплата метро, автобусов и паромов. Курс ЦБ РФ плюс
-                прозрачная надбавка, без скрытых комиссий.
+                Поможем пополнить Alipay — из него списывается оплата метро, автобусов и паромов. Наш курс без скрытых комиссий.
               </p>
               <div className="gp-contacts">
                 <a href="https://t.me/alipayfast" target="_blank" rel="noopener noreferrer" className="btn btn-red">

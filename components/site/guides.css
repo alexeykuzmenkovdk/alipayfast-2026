@@ -645,6 +645,14 @@
   color: color-mix(in oklab, var(--ink) 65%, transparent);
 }
 
+.gp-hint {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 16px 0;
+}
+
 /* Screenshots */
 .gp-screenshot {
   margin: 20px 0;

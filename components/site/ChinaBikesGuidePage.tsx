@@ -280,8 +280,7 @@ export function ChinaBikesGuidePage() {
             <div className="gp-cta">
               <h2>Едете в Китай?</h2>
               <p>
-                Поможем пополнить Alipay — им удобно платить за аренду велосипедов, метро, такси и покупки. Курс ЦБ РФ
-                плюс прозрачная надбавка, без скрытых комиссий.
+                Поможем пополнить Alipay — им удобно платить за аренду велосипедов, метро, такси и покупки. Наш курс без скрытых комиссий.
               </p>
               <div className="gp-contacts">
                 <a href="https://t.me/alipayfast" target="_blank" rel="noopener noreferrer" className="btn btn-red">

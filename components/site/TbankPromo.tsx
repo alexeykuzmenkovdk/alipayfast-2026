@@ -21,11 +21,12 @@ export function TbankPromo() {
             </Link>
           </div>
           <div className="tp-image">
-            <Image 
-              src="/assets/tbank-promo.svg" 
-              alt="Т-Банк инструкция" 
-              width={420} 
-              height={300}
+            <Image
+              src="/assets/covers/tbank.jpg"
+              alt="Перевод денег через Т-Банк для пополнения Alipay"
+              width={640}
+              height={427}
+              sizes="(max-width: 900px) 100vw, 480px"
               className="tp-img"
             />
           </div>

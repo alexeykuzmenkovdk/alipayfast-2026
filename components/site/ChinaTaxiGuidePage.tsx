@@ -98,7 +98,7 @@ export function ChinaTaxiGuidePage() {
                 <p>
                   <strong>Что понадобится.</strong> Телефон с интернетом и кошелёк Alipay с положительным балансом: из
                   него чаще всего и списывается оплата. Пополнить баланс заранее удобно через сервис{' '}
-                  <strong>AlipayFast</strong> — по курсу ЦБ РФ и без скрытых комиссий.
+                  <strong>AlipayFast</strong> — по выгодному курсу и без скрытых комиссий.
                 </p>
               </div>
             </div>
@@ -548,7 +548,7 @@ export function ChinaTaxiGuidePage() {
               <h2>Едете в Китай?</h2>
               <p>
                 Поездки в DiDi, метро и покупки удобнее оплачивать с баланса Alipay. Пополнить кошелёк можно через
-                AlipayFast: курс ЦБ РФ плюс прозрачная надбавка, зачисление обычно около 15 минут.
+                AlipayFast: наш курс, зачисление обычно около 15 минут.
               </p>
               <div className="gp-contacts">
                 <a href="https://t.me/alipayfast" target="_blank" rel="noopener noreferrer" className="btn btn-red">
