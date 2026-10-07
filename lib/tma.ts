@@ -120,15 +120,13 @@ export function getTelegramUser(initData: string): TelegramInitData {
   return { user, query_id: data.query_id }
 }
 
-function botToken() {
-  return process.env.TELEGRAM_MINI_APP_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN
-}
-
-// Все токены аккаунта — для диагностики: если initData подписана не основным
-// ботом, подскажем, каким именно.
+// Все токены аккаунта, которыми может быть подписана initData. Отдельный токен
+// нужен, когда панель оператора открывается из другого бота, чем клиентский
+// мини-апп (например, @AlipayFastAppBot).
 function knownTokens(): { name: string; token: string }[] {
   const entries: [string, string | undefined][] = [
     ['TELEGRAM_MINI_APP_BOT_TOKEN', process.env.TELEGRAM_MINI_APP_BOT_TOKEN],
+    ['TELEGRAM_ADMIN_BOT_TOKEN', process.env.TELEGRAM_ADMIN_BOT_TOKEN],
     ['TELEGRAM_BOT_TOKEN', process.env.TELEGRAM_BOT_TOKEN],
     ['TELEGRAM_SITE_BOT_TOKEN', process.env.TELEGRAM_SITE_BOT_TOKEN],
   ]
@@ -153,48 +151,50 @@ export function telegramAuth(initData: string | null): TelegramAuth {
   }
 
   if (!initData) return { reason: 'no_init_data' }
-  const token = botToken()
-  if (!token) return { reason: 'no_bot_token' }
+
+  const candidates = knownTokens()
+  if (!candidates.length) return { reason: 'no_bot_token' }
 
   if (process.env.TMA_DEBUG_DUMP === '1') {
     console.warn('[tma] raw initData', initData)
   }
 
-  const matched = matchInitData(initData, token)
-  if (!matched) {
-    const data = parseInitData(initData)
-    const otherTokens = knownTokens()
-      .filter((entry) => entry.token !== token)
-      .map((entry) => ({ [entry.name]: matchInitData(initData, entry.token) }))
-      .filter((entry) => Object.values(entry)[0])
-
-    const candidates = Object.fromEntries(
-      Object.entries(hashCandidates(initData, token)).map(([name, value]) => [name, value.slice(0, 16)]),
-    )
-
-    console.warn(
-      '[tma] initData signature mismatch',
-      JSON.stringify({
-        fields: Object.keys(data).sort(),
-        hasSignature: Boolean(data.signature),
-        receivedHash: (data.hash ?? '').slice(0, 16),
-        authDate: data.auth_date ?? null,
-        initDataLength: initData.length,
-        userId: data.user ? safeUserId(data.user) : null,
-        computed: candidates,
-        matchedOtherToken: otherTokens.length ? otherTokens : null,
-      }),
-    )
-    return { reason: otherTokens.length ? `signed_by:${Object.keys(otherTokens[0])[0]}` : 'signature_mismatch' }
+  // Мини-апп может открываться разными ботами аккаунта (клиентский @AlipayFastBot,
+  // админский @AlipayFastAppBot и т.п.), поэтому подпись проверяем против всех
+  // известных токенов — но всё равно требуем валидную подпись initData.
+  for (const entry of candidates) {
+    const matched = matchInitData(initData, entry.token)
+    if (!matched) continue
+    if (entry.name !== 'TELEGRAM_MINI_APP_BOT_TOKEN') {
+      console.warn('[tma] initData verified with', entry.name, `(${matched})`)
+    } else if (matched !== 'decoded/no_hash_signature') {
+      console.warn('[tma] initData matched non-canonical variant:', matched)
+    }
+    const parsed = getTelegramUser(initData)
+    if (!parsed.user) return { reason: 'no_user' }
+    return parsed
   }
 
-  if (matched !== 'decoded/no_hash_signature') {
-    console.warn('[tma] initData matched non-canonical variant:', matched)
-  }
+  const data = parseInitData(initData)
+  const primary = candidates[0]
+  const computed = Object.fromEntries(
+    Object.entries(hashCandidates(initData, primary.token)).map(([name, value]) => [name, value.slice(0, 16)]),
+  )
 
-  const parsed = getTelegramUser(initData)
-  if (!parsed.user) return { reason: 'no_user' }
-  return parsed
+  console.warn(
+    '[tma] initData signature mismatch',
+    JSON.stringify({
+      fields: Object.keys(data).sort(),
+      hasSignature: Boolean(data.signature),
+      receivedHash: (data.hash ?? '').slice(0, 16),
+      authDate: data.auth_date ?? null,
+      initDataLength: initData.length,
+      userId: data.user ? safeUserId(data.user) : null,
+      tokensChecked: candidates.map((entry) => entry.name),
+      computed,
+    }),
+  )
+  return { reason: 'signature_mismatch' }
 }
 
 function safeUserId(rawUser: string): number | null {

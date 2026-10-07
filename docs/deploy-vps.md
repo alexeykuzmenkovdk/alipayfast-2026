@@ -342,6 +342,8 @@ TELEGRAM_SITE_CHAT_ID=ваш_telegram_id
 
 # ── Мини-приложение ───────────────────────────────────────
 TELEGRAM_MINI_APP_BOT_TOKEN=токен_бота_мини_приложения
+# Если панель оператора открывается из другого бота — его токен (необязательно)
+TELEGRAM_ADMIN_BOT_TOKEN=
 ADMIN_USER_ID=ваш_telegram_id
 TELEGRAM_WEBHOOK_SECRET=случайная_строка_32_символа
 MINI_APP_URL=https://alipayfast.ru/telegram-mini-app

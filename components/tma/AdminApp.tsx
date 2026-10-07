@@ -51,7 +51,7 @@ function deniedText(reason: string) {
     return `Данные подписаны другим Telegram-ботом (${reason.slice('signed_by:'.length)}). Откройте панель из @AlipayFastBot.`
   }
   if (reason === 'signature_mismatch') {
-    return 'Подпись Telegram не совпала. Откройте панель из @AlipayFastBot.'
+    return 'Подпись Telegram не совпала ни с одним токеном ботов в .env. Если панель открыта из другого бота — добавьте его токен в TELEGRAM_ADMIN_BOT_TOKEN и перезапустите сервер.'
   }
   return `Сервер отклонил доступ (${reason}).`
 }
