@@ -323,6 +323,32 @@
   color: var(--muted);
 }
 
+/* Архив сделок */
+.tma-arch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+.tma-arch {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+}
+.tma-arch-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tma-arch-head b {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
 /* Этап оплаты */
 .tma-step {
   border: 1.5px solid var(--red);

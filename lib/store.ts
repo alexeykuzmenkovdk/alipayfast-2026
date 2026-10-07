@@ -407,6 +407,32 @@ export async function publishShowcaseItem(id: string) {
   return result.rows[0] ? mapShowcase(result.rows[0]) : undefined
 }
 
+export interface ArchivedOrder extends Order {
+  stepsCount: number
+  paidRub: number
+}
+
+// Закрытые сделки одного пользователя: завершённые и отменённые.
+export async function listUserArchivedOrders(userId: number, limit = 50): Promise<ArchivedOrder[]> {
+  await ensureReady()
+  const pool = getPool()
+  const result = await pool.query(
+    `SELECT o.*,
+      (SELECT COUNT(*) FROM payment_steps s WHERE s.order_id = o.id) AS steps_count,
+      (SELECT COALESCE(SUM(s.amount_rub), 0) FROM payment_steps s WHERE s.order_id = o.id AND s.status = 'VERIFIED') AS paid_rub
+     FROM orders o
+     WHERE o.user_id = $1 AND o.status IN ('COMPLETED', 'CANCELED')
+     ORDER BY o.updated_at DESC
+     LIMIT $2`,
+    [userId, limit],
+  )
+  return result.rows.map((row) => ({
+    ...mapOrder(row),
+    stepsCount: Number(row.steps_count ?? 0),
+    paidRub: Number(row.paid_rub ?? 0),
+  }))
+}
+
 export async function listOrders(statuses?: OrderStatus[]): Promise<OrderWithMeta[]> {
   await ensureReady()
   const pool = getPool()

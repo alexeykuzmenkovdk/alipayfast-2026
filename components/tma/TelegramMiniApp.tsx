@@ -8,20 +8,20 @@ import { useTelegram } from './useTelegram'
 import {
   ORDER_STATUS,
   fmtCny,
+  fmtDateTime,
   fmtRub,
+  type ArchivedOrder,
   type Order,
   type OrderMessage,
   type PaymentStep,
-  type ShowcaseItem,
 } from './types'
 
 
-type TabKey = 'exchange' | 'showcase' | 'requests' | 'profile'
+type TabKey = 'exchange' | 'archive' | 'profile'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'exchange', label: 'Обмен' },
-  { key: 'showcase', label: 'Витрина' },
-  { key: 'requests', label: 'Запросы' },
+  { key: 'archive', label: 'Архив' },
   { key: 'profile', label: 'Профиль' },
 ]
 
@@ -41,16 +41,14 @@ export function TelegramMiniApp() {
   const [steps, setSteps] = useState<PaymentStep[]>([])
   const [messages, setMessages] = useState<OrderMessage[]>([])
 
-  const [showcase, setShowcase] = useState<ShowcaseItem[]>([])
+  const [archive, setArchive] = useState<ArchivedOrder[]>([])
+  const [archiveLoaded, setArchiveLoaded] = useState(false)
 
   const [rubAmount, setRubAmount] = useState(50000)
   const [cnyAmount, setCnyAmount] = useState(4000)
   const [contactPhone, setContactPhone] = useState('')
 
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
-
-  const [sourcing, setSourcing] = useState({ link: '', description: '', priceRub: '', imageUrl: '' })
-  const [cooldownHours, setCooldownHours] = useState(0)
 
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
@@ -76,6 +74,15 @@ export function TelegramMiniApp() {
     [steps],
   )
 
+  const archivedTotals = useMemo(() => {
+    const completed = archive.filter((item) => item.status === 'COMPLETED')
+    return {
+      completed: completed.length,
+      rub: completed.reduce((sum, item) => sum + item.totalRub, 0),
+      cny: completed.reduce((sum, item) => sum + item.totalCny, 0),
+    }
+  }, [archive])
+
   const fetchActiveOrder = useCallback(async () => {
     try {
       const res = await fetch('/api/orders/active', { headers: apiHeaders, cache: 'no-store' })
@@ -96,21 +103,24 @@ export function TelegramMiniApp() {
     }
   }, [apiHeaders])
 
-  const fetchShowcase = useCallback(async () => {
+  const fetchArchive = useCallback(async () => {
     try {
-      const res = await fetch('/api/showcase', { cache: 'no-store' })
+      const res = await fetch('/api/orders/archive', { headers: apiHeaders, cache: 'no-store' })
+      if (!res.ok) return
       const data = await res.json()
-      setShowcase(data.items ?? [])
+      setDbReady(data.dbConfigured !== false)
+      setArchive(data.orders ?? [])
+      setArchiveLoaded(true)
     } catch (error) {
-      console.error('Не удалось загрузить витрину:', error)
+      console.error('Не удалось загрузить архив сделок:', error)
     }
-  }, [])
+  }, [apiHeaders])
 
   useEffect(() => {
     if (!telegramReady) return
     fetchActiveOrder()
-    fetchShowcase()
-  }, [telegramReady, fetchActiveOrder, fetchShowcase])
+    fetchArchive()
+  }, [telegramReady, fetchActiveOrder, fetchArchive])
 
   useEffect(() => {
     if (!order || !telegramReady) return
@@ -125,13 +135,16 @@ export function TelegramMiniApp() {
     return () => window.clearInterval(id)
   }, [order, apiHeaders, telegramReady])
 
+  // Раз в 10 секунд обновляем активную заявку и архив: закрытая сделка
+  // должна появиться в архиве сама, пока приложение открыто.
   useEffect(() => {
-    if (!order || !telegramReady) return
+    if (!telegramReady) return
     const id = window.setInterval(() => {
       fetchActiveOrder()
+      fetchArchive()
     }, 10000)
     return () => window.clearInterval(id)
-  }, [order, fetchActiveOrder, telegramReady])
+  }, [telegramReady, fetchActiveOrder, fetchArchive])
 
   const handleRubChange = (raw: string) => {
     const parsed = Number(raw.replace(/[^\d]/g, ''))
@@ -146,12 +159,6 @@ export function TelegramMiniApp() {
     if (!Number.isFinite(parsed)) return
     setCnyAmount(parsed)
     setRubAmount(Math.round(parsed * rateForCny(parsed)))
-  }
-
-  const pickShowcase = (item: ShowcaseItem) => {
-    setCnyAmount(item.priceCny)
-    setRubAmount(Math.round(item.priceCny * rateForCny(item.priceCny)))
-    setTab('exchange')
   }
 
   const createOrder = async () => {
@@ -191,7 +198,8 @@ export function TelegramMiniApp() {
       await fetch(`/api/orders/${order.id}/cancel`, { method: 'POST', headers: apiHeaders })
       setReceiptUrl(null)
       await fetchActiveOrder()
-      setNotice({ kind: 'ok', text: 'Заявка отменена.' })
+      await fetchArchive()
+      setNotice({ kind: 'ok', text: 'Заявка отменена и перенесена в архив.' })
     } finally {
       setBusy(false)
     }
@@ -254,44 +262,6 @@ export function TelegramMiniApp() {
     }
   }
 
-  const submitSourcing = async () => {
-    setBusy(true)
-    setNotice(null)
-    try {
-      const res = await fetch('/api/sourcing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders },
-        body: JSON.stringify({
-          description: sourcing.description,
-          imageUrl: sourcing.imageUrl,
-          link: sourcing.link || undefined,
-          priceRub: sourcing.priceRub ? Number(sourcing.priceRub) : undefined,
-        }),
-      })
-      if (res.status === 429) {
-        const data = await res.json()
-        setCooldownHours(data.nextAvailableHours ?? 48)
-        return
-      }
-      if (!res.ok) {
-        setNotice({ kind: 'err', text: 'Не удалось отправить запрос.' })
-        return
-      }
-      setCooldownHours(48)
-      setSourcing({ link: '', description: '', priceRub: '', imageUrl: '' })
-      setNotice({ kind: 'ok', text: 'Запрос отправлен. Ответ придёт в Telegram.' })
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleSourcingPhoto = async (file: File) => {
-    setBusy(true)
-    const url = await uploadFile(file)
-    setBusy(false)
-    if (url) setSourcing((prev) => ({ ...prev, imageUrl: url }))
-  }
-
   if (!telegramReady || rates.loading) {
     return <div className="tma-loading">Загружаем AlipayFast…</div>
   }
@@ -325,7 +295,7 @@ export function TelegramMiniApp() {
       <main className="tma-body">
         {!dbReady && (
           <div className="tma-alert err">
-            База данных не подключена: заявки, чат и витрина недоступны. Задайте <b>DATABASE_URL</b> и перезапустите сервер.
+            База данных не подключена: заявки, чат и архив сделок недоступны. Задайте <b>DATABASE_URL</b> и перезапустите сервер.
           </div>
         )}
 
@@ -418,89 +388,61 @@ export function TelegramMiniApp() {
             </>
           ))}
 
-        {tab === 'showcase' && (
-          <>
-            <div className="tma-alert">
-              Цены из Китая и экономия против российской розницы. Нажмите «Хочу купить» — сумма подставится в калькулятор.
-            </div>
-            {showcase.length === 0 ? (
-              <div className="tma-empty">Витрина пока пуста</div>
-            ) : (
-              <div className="tma-grid">
-                {showcase.map((item) => (
-                  <article key={item.id} className="tma-item">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.imageUrl} alt={item.title} loading="lazy" />
-                    <div className="tma-item-body">
-                      <div className="tma-item-title">{item.title}</div>
-                      <div className="tma-benefit">Экономия {fmtRub(item.benefitRub)}</div>
-                      <div className="tma-hint">В Китае {fmtCny(item.priceCny)} · в РФ {fmtRub(item.priceRub)}</div>
-                      <div className="tma-item-foot">
-                        <button className="tma-btn line" type="button" onClick={() => pickShowcase(item)}>
-                          Хочу купить
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {tab === 'requests' && (
+        {tab === 'archive' && (
           <section className="tma-card">
-            <h2 className="tma-h">Узнать цену в Китае</h2>
-            <p className="tma-sub">
-              Пришлите фото или ссылку на товар — оператор посчитает цену и ответит в Telegram. Один запрос раз в 48 часов.
-            </p>
+            <h2 className="tma-h">Архив сделок</h2>
 
-            <label className="tma-label">
-              <span>Ссылка на товар</span>
-              <input
-                className="tma-input"
-                value={sourcing.link}
-                placeholder="https://…"
-                onChange={(event) => setSourcing((prev) => ({ ...prev, link: event.target.value }))}
-              />
-            </label>
+            {!archiveLoaded && <p className="tma-sub">Загружаем сделки…</p>}
 
-            <label className="tma-label">
-              <span>Фото товара</span>
-              <input
-                className="tma-input"
-                type="file"
-                accept="image/*"
-                onChange={(event) => event.target.files?.[0] && handleSourcingPhoto(event.target.files[0])}
-              />
-            </label>
-            {sourcing.imageUrl && <div className="tma-hint">Фото загружено</div>}
+            {archiveLoaded && archive.length === 0 && (
+              <p className="tma-sub">
+                Здесь появятся ваши закрытые сделки: завершённые и отменённые заявки с суммами и датами.
+              </p>
+            )}
 
-            <label className="tma-label">
-              <span>Описание</span>
-              <textarea
-                className="tma-textarea"
-                value={sourcing.description}
-                placeholder="Например: кроссовки Nike Air Force 1, белые, размер 42"
-                onChange={(event) => setSourcing((prev) => ({ ...prev, description: event.target.value }))}
-              />
-            </label>
+            {archive.length > 0 && (
+              <>
+                <p className="tma-sub">
+                  Завершено {archivedTotals.completed} из {archive.length} · итого{' '}
+                  {fmtRub(archivedTotals.rub)} → {fmtCny(archivedTotals.cny)}
+                </p>
 
-            <label className="tma-label">
-              <span>Цена в РФ, ₽ (если знаете)</span>
-              <input
-                className="tma-input"
-                value={sourcing.priceRub}
-                inputMode="numeric"
-                onChange={(event) => setSourcing((prev) => ({ ...prev, priceRub: event.target.value.replace(/[^\d]/g, '') }))}
-              />
-            </label>
+                <div className="tma-arch-list">
+                  {archive.map((item) => (
+                    <article key={item.id} className="tma-arch">
+                      <div className="tma-arch-head">
+                        <b>#{item.id.slice(0, 6)}</b>
+                        <span className={`tma-pill ${item.status === 'COMPLETED' ? 'ok' : 'mute'}`}>
+                          {ORDER_STATUS[item.status]}
+                        </span>
+                      </div>
 
-            <button className="tma-btn" type="button" disabled={busy || cooldownHours > 0} onClick={submitSourcing}>
-              Узнать цену
-            </button>
-            {cooldownHours > 0 && (
-              <div className="tma-alert">Повторный запрос будет доступен через {cooldownHours} ч.</div>
+                      <div className="tma-kv">
+                        <div>
+                          <span>Отдано</span>
+                          <b>{fmtRub(item.paidRub > 0 ? item.paidRub : item.totalRub)}</b>
+                        </div>
+                        <div>
+                          <span>Получено</span>
+                          <b>{fmtCny(item.totalCny)}</b>
+                        </div>
+                        <div>
+                          <span>Курс сделки</span>
+                          <b>{Number(item.rate).toFixed(2)} ₽</b>
+                        </div>
+                        <div>
+                          <span>{item.status === 'COMPLETED' ? 'Завершена' : 'Отменена'}</span>
+                          <b>{fmtDateTime(item.updatedAt)}</b>
+                        </div>
+                      </div>
+
+                      <div className="tma-hint">
+                        {item.stepsCount > 0 ? `Этапов оплаты: ${item.stepsCount}` : 'Оплата одним платежом'}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         )}

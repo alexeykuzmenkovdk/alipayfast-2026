@@ -33,20 +33,16 @@ export interface OrderMessage {
   createdAt: string
 }
 
-export interface ShowcaseItem {
+export interface ArchivedOrder {
   id: string
-  title: string
-  imageUrl: string
-  priceCny: number
-  priceRub: number
-  benefitRub: number
-}
-
-export interface SourcingRequest {
-  id: string
-  answerCny?: number
-  comment?: string
-  status: string
+  status: OrderStatus
+  totalRub: number
+  totalCny: number
+  rate: number
+  stepsCount: number
+  paidRub: number
+  createdAt: string
+  updatedAt: string
 }
 
 export const ORDER_STATUS: Record<OrderStatus, string> = {
