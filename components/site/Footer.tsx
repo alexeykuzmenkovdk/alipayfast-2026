@@ -35,7 +35,10 @@ export function Footer() {
             <Link href="/terms" style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
               Условия использования
             </Link>{' '}
-            · Политика конфиденциальности
+            ·{' '}
+            <Link href="/privacy" style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Политика конфиденциальности
+            </Link>
           </span>
         </div>
       </div>

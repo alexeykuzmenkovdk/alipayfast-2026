@@ -226,12 +226,15 @@ export function Office() {
         <div className="office-info reveal">
           <span className="sec-idx">07 / ОФИС</span>
           <h2 className="disp h2">
-            Наличные
+            Консультации
             <br />
-            во <span className="red">Владивостоке</span>
+            во
+            <br />
+            <span className="red">Владивостоке</span>
           </h2>
           <p style={{ fontSize: 17, color: 'var(--muted)', marginTop: 20, maxWidth: 520 }}>
-            Можно встретиться лично с администратором и обменять наличные. Предупредите о визите в Telegram или WhatsApp.
+            Можно встретиться лично с администратором для консультации по работе с Alipay и китайскими площадками. О
+            визите предупредите в Telegram или WhatsApp.
           </p>
           <div className="o-grid">
             <div className="o-cell">
@@ -259,10 +262,10 @@ export function Office() {
               </div>
             </div>
             <div className="o-cell" style={{ gridColumn: '1 / -1', paddingLeft: 0, borderLeft: 0 }}>
-              <h4>При личном обмене</h4>
+              <h4>При личном визите</h4>
               <ul style={{ columns: 2, columnGap: 24 }}>
-                <li>Мгновенное получение юаней</li>
-                <li>Индивидуальные условия</li>
+                <li>Разбор вашего сценария покупок</li>
+                <li>Индивидуальный подбор решения</li>
                 <li>Консультация по Alipay</li>
                 <li>Помощь с установкой приложения</li>
               </ul>
