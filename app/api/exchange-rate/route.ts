@@ -57,9 +57,10 @@ export async function GET(request: Request) {
   const tiers = buildRateTiersWithSettings(baseRate, settings)
   const bestRate = tiers.reduce((min, t) => Math.min(min, t.rate), Number.POSITIVE_INFINITY)
 
-  const nextUpdate = new Date(now)
-  nextUpdate.setDate(nextUpdate.getDate() + 1)
-  nextUpdate.setHours(12, 0, 0, 0)
+  // Курс обновляется ежедневно в 10:00 по Владивостоку (UTC+10) — это ровно
+  // 00:00 UTC, поэтому следующее обновление — начало следующих суток UTC.
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const nextUpdate = new Date(Math.floor(now.getTime() / DAY_MS) * DAY_MS + DAY_MS)
 
   return NextResponse.json({
     success: true,

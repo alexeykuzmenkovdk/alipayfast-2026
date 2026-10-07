@@ -16,7 +16,7 @@ export function ExchangeSettingsForm() {
   const [token, setToken] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [settings, setSettings] = useState<Settings | null>(null)
-  const [markup, setMarkup] = useState('0.73')
+  const [markup, setMarkup] = useState('0.88')
   const [useManual, setUseManual] = useState(false)
   const [manualRate, setManualRate] = useState('')
   const [status, setStatus] = useState<string | null>(null)
@@ -144,11 +144,13 @@ export function ExchangeSettingsForm() {
       {error && <div className="adm-err">{error}</div>}
 
       <label className="adm-lbl">
-        Надбавка к курсу ЦБ (₽), уровень «от 6000 ¥»
+        Надбавка к курсу ЦБ (₽), верхний уровень «от 10 000 ¥»
         <input value={markup} onChange={(e) => setMarkup(e.target.value)} inputMode="decimal" />
       </label>
       <p className="adm-hint">
-        Уровни надбавок задаются в <code>lib/exchange-config.ts</code> (DYNAMIC_MARKUP).
+        Это самый выгодный уровень. Остальные уровни ранжира сдвигаются вместе с ним по
+        фиксированному шагу: до 1 000 ¥ / от 1 000 ¥ / от 3 000 ¥ / от 10 000 ¥
+        (границы и шаги — в <code>lib/exchange-config.ts</code>).
       </p>
 
       <label className="adm-check">

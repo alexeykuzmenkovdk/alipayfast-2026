@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { getMarkupForAmount } from '@/lib/exchange-config'
+import { cnyFromRub, rateForCnyValue } from '@/lib/exchange-config'
 import { useRates } from '@/components/site/rates-context'
 import { DealRoom } from './DealRoom'
 import { useTelegram } from './useTelegram'
@@ -60,20 +60,23 @@ export function TelegramMiniApp() {
 
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+  // Курс считаем по тому же ранжиру, что и на сайте: уровни берём из tiers
+  // (единый источник — lib/exchange-config), а не своей формулой.
   const rateForCny = useCallback(
     (amountCny: number) => {
       if (rates.isManual && rates.manualRate) return rates.manualRate
-      return rates.baseRate + getMarkupForAmount(amountCny)
+      return rateForCnyValue(rates.tiers, amountCny)
     },
-    [rates.baseRate, rates.isManual, rates.manualRate],
+    [rates.tiers, rates.isManual, rates.manualRate],
   )
 
   const rateForRub = useCallback(
     (amountRub: number) => {
       if (rates.isManual && rates.manualRate) return rates.manualRate
-      return rates.baseRate + getMarkupForAmount(amountRub / rates.baseRate)
+      const { cny } = cnyFromRub(rates.tiers, amountRub)
+      return cny > 0 ? amountRub / cny : rates.baseRate
     },
-    [rates.baseRate, rates.isManual, rates.manualRate],
+    [rates.tiers, rates.isManual, rates.manualRate, rates.baseRate],
   )
 
   const currentRate = useMemo(() => rateForCny(cnyAmount), [cnyAmount, rateForCny])

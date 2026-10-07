@@ -16,8 +16,9 @@ export interface MarkupTier {
 }
 
 export const EXCHANGE_CONFIG = {
-  // Базовая надбавка к курсу ЦБ РФ (в рублях). Используется как значение по умолчанию.
-  DEFAULT_MARKUP: 0.73,
+  // Надбавка к курсу ЦБ РФ (в рублях) для верхнего уровня. Служит базой
+  // ранжира: остальные уровни считаются от неё по фиксированным шагам.
+  DEFAULT_MARKUP: 0.88,
 
   // Режим по умолчанию (false = автоматический, true = ручной)
   DEFAULT_USE_MANUAL_RATE: false,
@@ -31,11 +32,16 @@ export const EXCHANGE_CONFIG = {
   // Время кэширования настроек (в миллисекундах)
   CACHE_DURATION: 30 * 60 * 1000, // 30 минут
 
+  // Единый ранжир курса по сумме заказа (в юанях). Границы уровней и надбавка
+  // к курсу ЦБ РФ. Чем крупнее сумма — тем ниже надбавка (выгоднее курс).
+  // Это единственный источник истины для сайта, калькулятора, графика и
+  // мини-приложения. Шаг ранжира (разница надбавок между уровнями):
+  //   1.09 → 0.99 → 0.89 (−0.10, −0.10) → 0.88 (−0.01 для самого крупного)
   DYNAMIC_MARKUP: [
-    { maxYuan: 500, markup: 0.96 }, // До 500 юаней: Курс ЦБ + 0.96
-    { maxYuan: 2000, markup: 0.84 }, // До 2000 юаней: Курс ЦБ + 0.84
-    { maxYuan: 6000, markup: 0.8 }, // От 2000 до 6000 юаней: Курс ЦБ + 0.80
-    { maxYuan: Number.POSITIVE_INFINITY, markup: 0.73 }, // От 6000 юаней и выше: Курс ЦБ + 0.73
+    { maxYuan: 1000, markup: 1.09 }, // до 1 000 ¥
+    { maxYuan: 3000, markup: 0.99 }, // от 1 000 ¥
+    { maxYuan: 10000, markup: 0.89 }, // от 3 000 ¥
+    { maxYuan: Number.POSITIVE_INFINITY, markup: 0.88 }, // от 10 000 ¥
   ] as MarkupTier[],
 } as const
 
@@ -97,6 +103,11 @@ export function buildRateTiers(
   opts?: { useManualRate?: boolean; manualRate?: number | null; settingsMarkup?: number },
 ): RateTier[] {
   const manual = opts?.useManualRate && opts.manualRate ? opts.manualRate : null
+  // Надбавка из настроек задаёт верхний (самый выгодный) уровень ранжира.
+  // Весь ранжир сдвигается на разницу с надбавкой по умолчанию, поэтому шаг
+  // между уровнями сохраняется, а оператор может поднять/опустить весь ряд.
+  const baseMarkup = opts?.settingsMarkup ?? EXCHANGE_CONFIG.DEFAULT_MARKUP
+  const shift = Number.isFinite(baseMarkup) ? baseMarkup - EXCHANGE_CONFIG.DEFAULT_MARKUP : 0
   const tiers = EXCHANGE_CONFIG.DYNAMIC_MARKUP
   let from = 0
 
@@ -104,8 +115,8 @@ export function buildRateTiers(
     const isLast = !Number.isFinite(tier.maxYuan)
     // верхняя граница всегда конечна — Infinity не переживает JSON (превращается в null)
     const to = isLast ? Number.MAX_SAFE_INTEGER : tier.maxYuan
-    const markup = manual ? 0 : tier.markup
-    const rate = manual ?? baseRate + tier.markup
+    const markup = manual ? 0 : +(tier.markup + shift).toFixed(4)
+    const rate = manual ?? baseRate + markup
     const label =
       i === 0 ? `до ${fmtInt(to)} ¥` : isLast ? `от ${fmtInt(from)} ¥` : `${fmtInt(from)} – ${fmtInt(to)} ¥`
 
@@ -115,11 +126,50 @@ export function buildRateTiers(
   })
 }
 
-export function buildRateTiersWithSettings(baseRate: string | number, settings: {
-  useManualRate?: boolean
-  manualRate?: number | null
-  markup?: number
-}): RateTier[] {
+export function buildRateTiersWithSettings(
+  baseRate: string | number,
+  settings: { useManualRate?: boolean; manualRate?: number | null; markup?: number },
+): RateTier[] {
   const base = typeof baseRate === 'string' ? Number.parseFloat(baseRate) : baseRate
-  return buildRateTiers(Number.isFinite(base) && base > 0 ? base : EXCHANGE_CONFIG.FALLBACK_RATE, settings)
+  return buildRateTiers(Number.isFinite(base) && base > 0 ? base : EXCHANGE_CONFIG.FALLBACK_RATE, {
+    useManualRate: settings.useManualRate,
+    manualRate: settings.manualRate,
+    settingsMarkup: settings.markup,
+  })
+}
+
+// ── Единая логика ранжира для всех поверхностей ──────────────────────────────
+// Калькулятор, график и мини-приложение обязаны считать курс одинаково:
+// находят уровень по сумме в юанях и берут его курс/надбавку.
+
+/** Индекс уровня для суммы в юанях (последний уровень — «от N и выше»). */
+export function tierIndexForCny(tiers: RateTier[], cny: number): number {
+  const i = tiers.findIndex((t) => cny >= t.from && cny < t.to)
+  return i === -1 ? tiers.length - 1 : i
+}
+
+/** Курс (₽ за 1 ¥) для суммы в юанях. */
+export function rateForCnyValue(tiers: RateTier[], cny: number): number {
+  const tier = tiers[tierIndexForCny(tiers, cny)]
+  return tier ? tier.rate : EXCHANGE_CONFIG.FALLBACK_RATE
+}
+
+/**
+ * Сколько юаней дадут за сумму в рублях — с учётом ранжира.
+ * Перебираем уровни сверху вниз: для крупных сумм сначала примеряем самый
+ * выгодный курс, чтобы не «перепрыгнуть» на более дешёвый уровень.
+ */
+export function cnyFromRub(tiers: RateTier[], rub: number): { cny: number; tier: number } {
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    const c = rub / tiers[i].rate
+    if (c >= tiers[i].from) return { cny: c, tier: i }
+  }
+  return { cny: tiers[0] ? rub / tiers[0].rate : 0, tier: 0 }
+}
+
+/** Сколько рублей нужно отдать за сумму в юанях — с учётом ранжира. */
+export function rubFromCny(tiers: RateTier[], cny: number): { rub: number; tier: number } {
+  const i = tierIndexForCny(tiers, cny)
+  const rate = tiers[i]?.rate ?? EXCHANGE_CONFIG.FALLBACK_RATE
+  return { rub: cny * rate, tier: i }
 }

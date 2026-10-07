@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRates } from './rates-context'
 import { fmt } from './shared'
-import type { RateTier } from '@/lib/exchange-config'
+import { cnyFromRub, rubFromCny, type RateTier } from '@/lib/exchange-config'
 
 const MIN_RUB = 3000
 const STEP_RUB = 1000
@@ -51,23 +51,9 @@ export function Calculator({
     localStorage.setItem('apf_val', String(val))
   }, [val])
 
-  const tierIdxByCny = (cny: number) => {
-    const i = TIERS.findIndex((t) => cny >= t.from && cny < t.to)
-    return i === -1 ? TIERS.length - 1 : i
-  }
-
-  const rubToCny = (rub: number) => {
-    for (let i = TIERS.length - 1; i >= 0; i--) {
-      const c = rub / TIERS[i].rate
-      if (c >= TIERS[i].from) return { cny: c, tier: i }
-    }
-    return { cny: rub / TIERS[0].rate, tier: 0 }
-  }
-
-  const cnyToRub = (cny: number) => {
-    const i = tierIdxByCny(cny)
-    return { rub: cny * TIERS[i].rate, tier: i }
-  }
+  // Курс считается тем же кодом, что и на графике и в мини-приложении.
+  const rubToCny = (rub: number) => cnyFromRub(TIERS, rub)
+  const cnyToRub = (cny: number) => rubFromCny(TIERS, cny)
 
   let rub: number
   let cny: number
