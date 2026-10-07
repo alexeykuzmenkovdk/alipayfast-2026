@@ -37,7 +37,10 @@ export function validateInitData(initData: string, botToken: string) {
     .map((key) => `${key}=${data[key]}`)
     .join('\n')
 
-  const secretKey = crypto.createHash('sha256').update(botToken).digest()
+  // Telegram Mini Apps: secret_key = HMAC_SHA256("WebAppData", bot_token),
+  // hash = HMAC_SHA256(secret_key, data_check_string).
+  // (sha256(bot_token) — это алгоритм Login Widget, для initData он не подходит.)
+  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest()
   const hmac = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
 
   const expected = Buffer.from(hmac, 'utf8')
