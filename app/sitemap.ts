@@ -7,5 +7,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${baseUrl}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: `${baseUrl}/materials`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    {
+      url: `${baseUrl}/guides/china-50-things`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ]
 }

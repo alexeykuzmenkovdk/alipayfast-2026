@@ -17,11 +17,11 @@ export const NAV = [
 ]
 
 export const GUIDES = [
-  { tag: 'Alipay', t: 'Как установить, верифицировать и пользоваться Alipay', m: '12 мин', img: '/assets/alipay-guide/cover.jpg', href: '/guides/alipay' },
-  { tag: 'Poizon', t: 'Как заказать товары с Poizon: полная инструкция', m: '12 мин', img: '/assets/poizon-guide/poizon-01.jpg', href: '/guides/poizon' },
-  { tag: 'Т-Банк', t: 'Как перевести деньги через Т-Банк', m: '3 мин', img: '/assets/guide-alipay.jpg', href: '/guides/tbank' },
-  { tag: 'Taobao', t: 'Как заказать товары с Taobao: пошаговая инструкция', m: '12 мин', img: '/assets/taobao-guide/taobao-01.jpg', href: '/guides/taobao' },
-  { tag: 'Поездки в Китай', t: 'Велосипеды и мопеды в Китае: как арендовать', m: '6 мин', img: '/assets/china-bikes/bike-01.jpg', href: '/guides/china-bikes' },
+  { tag: 'Alipay', t: 'Как установить, верифицировать и пользоваться Alipay', m: '12 мин', img: '/assets/covers/alipay-setup.jpg', href: '/guides/alipay' },
+  { tag: 'Poizon', t: 'Как заказать товары с Poizon: полная инструкция', m: '12 мин', img: '/assets/covers/poizon.jpg', href: '/guides/poizon' },
+  { tag: 'Т-Банк', t: 'Как перевести деньги через Т-Банк', m: '3 мин', img: '/assets/covers/tbank.jpg', href: '/guides/tbank' },
+  { tag: 'Taobao', t: 'Как заказать товары с Taobao: пошаговая инструкция', m: '12 мин', img: '/assets/covers/taobao.jpg', href: '/guides/taobao' },
+  { tag: 'Поездки в Китай', t: 'Велосипеды и мопеды в Китае: как арендовать', m: '6 мин', img: '/assets/covers/bikes.jpg', href: '/guides/china-bikes' },
 ]
 
 const MAT_URL = '/materials'

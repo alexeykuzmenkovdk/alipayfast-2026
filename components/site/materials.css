@@ -81,19 +81,18 @@
   border-bottom: 1px solid var(--line);
 }
 .mt-feat-img {
-  aspect-ratio: 16/11;
-  background: var(--red);
+  aspect-ratio: 3/2;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
   overflow: hidden;
   position: relative;
 }
 .mt-feat-img img {
   position: absolute;
-  left: 50%;
-  top: 10%;
-  width: 46% !important;
-  height: auto !important;
-  transform: translateX(-50%) rotate(-4deg);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
 }
 .mt-tag {
   font-family: var(--mono);
@@ -134,8 +133,17 @@
   gap: 10px;
   cursor: pointer;
 }
+.mt-card-soon {
+  cursor: default;
+}
+.mt-card-soon:hover h3 {
+  color: inherit;
+}
+.mt-card-soon:hover .mt-card-img img {
+  transform: none;
+}
 .mt-card-img {
-  aspect-ratio: 4/3;
+  aspect-ratio: 3/2;
   background: var(--paper-2);
   overflow: hidden;
   position: relative;
@@ -144,7 +152,7 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: cover;
-  object-position: 50% 0;
+  object-position: 50% 50%;
   transition: transform 0.5s;
 }
 .mt-card:hover .mt-card-img img {

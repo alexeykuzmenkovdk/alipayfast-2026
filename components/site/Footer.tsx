@@ -31,7 +31,11 @@ export function Footer() {
             <Link href="/materials" style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
               Полезные материалы
             </Link>{' '}
-            · Условия использования · Политика конфиденциальности
+            ·{' '}
+            <Link href="/terms" style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Условия использования
+            </Link>{' '}
+            · Политика конфиденциальности
           </span>
         </div>
       </div>

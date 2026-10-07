@@ -28,7 +28,7 @@ const POSTS: Post[] = [
     d: 'Регистрация по российскому номеру, привязка загранпаспорта, переводы, лимиты и вывод средств.',
     m: '12 мин',
     date: '02.10.2026',
-    img: '/assets/alipay-guide/cover.jpg',
+    img: '/assets/covers/alipay-setup.jpg',
     href: '/guides/alipay',
   },
   {
@@ -37,7 +37,7 @@ const POSTS: Post[] = [
     d: 'Установка приложения, регистрация, поиск, покупка через Alipay и доставка на склад посредника.',
     m: '12 мин',
     date: '28.09.2026',
-    img: '/assets/poizon-guide/poizon-01.jpg',
+    img: '/assets/covers/poizon.jpg',
     href: '/guides/poizon',
   },
   {
@@ -46,17 +46,8 @@ const POSTS: Post[] = [
     d: 'Почему только Т-Банк и как правильно оформить перевод.',
     m: '3 мин',
     date: '21.09.2026',
-    img: '/assets/guide-alipay.jpg',
+    img: '/assets/covers/tbank.jpg',
     href: '/guides/tbank',
-  },
-  {
-    c: 'Alipay',
-    t: 'Китайский интерфейс Alipay: шпаргалка',
-    d: 'Главные кнопки и разделы, если приложение переключилось на китайский.',
-    m: '4 мин',
-    date: '14.09.2026',
-    ph: '支',
-    href: '/materials',
   },
   {
     c: 'Taobao',
@@ -64,8 +55,17 @@ const POSTS: Post[] = [
     d: 'Установка приложения, регистрация, поиск, оплата через Alipay и доставка на склад посредника.',
     m: '12 мин',
     date: '07.09.2026',
-    img: '/assets/taobao-guide/taobao-01.jpg',
+    img: '/assets/covers/taobao.jpg',
     href: '/guides/taobao',
+  },
+  {
+    c: 'Поездки в Китай',
+    t: 'Путешествуете в Китай из России: 50 вещей, которые нужно знать в 2026 году',
+    d: 'Безвиз на 30 дней, VPN и приложения, российские карты и Alipay, граница и Дальний Восток, язык и еда — всё для поездки из России.',
+    m: '18 мин',
+    date: '07.10.2026',
+    img: '/assets/covers/china-travel-2026.jpg',
+    href: '/guides/china-50-things',
   },
   {
     c: 'Поездки в Китай',
@@ -73,7 +73,7 @@ const POSTS: Post[] = [
     d: 'Установка приложения, оплата через Alipay, тарифы, отмена заказа и безопасность.',
     m: '8 мин',
     date: '08.10.2026',
-    img: '/assets/china-taxi/01-hero.png',
+    img: '/assets/covers/taxi.jpg',
     href: '/guides/china-taxi',
   },
   {
@@ -82,7 +82,7 @@ const POSTS: Post[] = [
     d: 'Настройка приложения, пополнение баланса через AlipayFast, оплата в магазинах и транспорте.',
     m: '7 мин',
     date: '08.10.2026',
-    img: '/assets/alipay-china/01-hero.jpg',
+    img: '/assets/covers/alipay-china.jpg',
     href: '/guides/alipay-china',
   },
   {
@@ -91,7 +91,7 @@ const POSTS: Post[] = [
     d: 'Настраиваем транспортный QR-код из дома: город, универсальный проездной, турникеты.',
     m: '5 мин',
     date: '07.10.2026',
-    img: '/assets/china-metro/hero.svg',
+    img: '/assets/covers/metro.jpg',
     href: '/guides/china-metro',
   },
   {
@@ -100,17 +100,8 @@ const POSTS: Post[] = [
     d: 'Синие, бирюзовые и жёлтые велосипеды: чем отличаются, как разблокировать и как платить через Alipay.',
     m: '6 мин',
     date: '06.10.2026',
-    img: '/assets/china-bikes/bike-01.jpg',
+    img: '/assets/covers/bikes.jpg',
     href: '/guides/china-bikes',
-  },
-  {
-    c: 'Поездки в Китай',
-    t: 'Харбин и Суйфэньхэ: платим Alipay на месте',
-    d: 'QR-оплата в такси, отелях и на рынках.',
-    m: '5 мин',
-    date: '30.08.2026',
-    ph: '¥',
-    href: '/materials',
   },
 ]
 
@@ -169,7 +160,7 @@ export function MaterialsPage() {
           <article className="mt-feat">
             <div className="mt-feat-img">
               {feat.img ? (
-                <Image src={feat.img} alt="" width={600} height={420} />
+                <Image src={feat.img} alt="" width={600} height={420} priority />
               ) : (
                 <div
                   className="ph"
@@ -211,20 +202,32 @@ export function MaterialsPage() {
               — подскажем.
             </div>
           )}
-          {rest.map((p) => (
-            <article className="mt-card reveal" key={p.t}>
-              <div className="mt-card-img">
-                {p.img ? <Image src={p.img} alt="" width={480} height={360} /> : <div className="ph">{p.ph}</div>}
-                <span className="num">{p.c}</span>
-              </div>
-              <h3>{p.t}</h3>
-              <p>{p.d}</p>
-              <div className="ft2">
-                <span>{p.date}</span>
-                <span>{p.m}</span>
-              </div>
-            </article>
-          ))}
+          {rest.map((p) => {
+            const ready = !!p.href && p.href !== '/materials'
+            const body = (
+              <>
+                <div className="mt-card-img">
+                  {p.img ? <Image src={p.img} alt="" width={480} height={360} /> : <div className="ph">{p.ph}</div>}
+                  <span className="num">{p.c}</span>
+                </div>
+                <h3>{p.t}</h3>
+                <p>{p.d}</p>
+                <div className="ft2">
+                  <span>{p.date}</span>
+                  <span>{ready ? p.m : 'Скоро'}</span>
+                </div>
+              </>
+            )
+            return ready ? (
+              <Link className="mt-card reveal" key={p.t} href={p.href as string}>
+                {body}
+              </Link>
+            ) : (
+              <article className="mt-card mt-card-soon reveal" key={p.t}>
+                {body}
+              </article>
+            )
+          })}
           {list.length > 0 && (
             <div className="mt-soon">
               <span className="mt-tag">Скоро</span>

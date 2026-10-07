@@ -27,6 +27,17 @@ export function TbankGuidePage() {
           <article className="gp-article">
             {/* Why T-Bank */}
             <div className="gp-block">
+              <figure className="gp-figure gp-figure-wide">
+                <Image
+                  src="/assets/covers/tbank.jpg"
+                  alt="Обложка: перевод через Т-Банк без ошибок"
+                  width={1248}
+                  height={832}
+                  sizes="(max-width: 760px) 100vw, 720px"
+                  priority
+                  className="gp-shot"
+                />
+              </figure>
               <h2>Почему мы работаем только с Т-Банком</h2>
               <p>
                 Мы сознательно ограничили список банков и принимаем переводы исключительно через Т-Банк. Это не прихоть,
@@ -170,12 +181,12 @@ export function TbankGuidePage() {
                       <h4>📱 Инструкция для iOS (iPhone)</h4>
                       <ol>
                         <li>Перейдите в историю переводов и нажмите на нужный платеж</li>
-                        <li>Нажмите на "Документы по операции"</li>
-                        <li>Откроется чек, нажмите на иконку "Поделиться" справа сверху</li>
-                        <li>В появившемся снизу меню выберите "Отправить по почте"</li>
-                        <li>Затем нажмите на пункт "Другой e-mail"</li>
+                        <li>Нажмите на «Документы по операции»</li>
+                        <li>Откроется чек, нажмите на иконку «Поделиться» справа сверху</li>
+                        <li>В появившемся снизу меню выберите «Отправить по почте»</li>
+                        <li>Затем нажмите на пункт «Другой e-mail»</li>
                         <li>Вставьте электронную почту которую вам предоставили</li>
-                        <li>Нажмите "Готово"</li>
+                        <li>Нажмите «Готово»</li>
                       </ol>
                       <div className="gp-screenshot">
                         <Image 
@@ -197,7 +208,7 @@ export function TbankGuidePage() {
                         <li>В появившемся снизу меню выберите кнопку «Т-Банк - Отправить на email»</li>
                         <li>В разделе «Получатель» выберите «Другой e-mail»</li>
                         <li>Вставьте электронную почту которую вам предоставили</li>
-                        <li>Нажмите "Готово"</li>
+                        <li>Нажмите «Готово»</li>
                       </ol>
                       <div className="gp-screenshot">
                         <Image 
@@ -229,8 +240,8 @@ export function TbankGuidePage() {
 
                   <div className="gp-substeps">
                     <div className="gp-substep">
-                      <h4>Шаг 5.1: Найдите раздел "Оплатить и получить"</h4>
-                      <p>На главной странице Alipay нажмите на кнопку "Оплатить и получить"</p>
+                      <h4>Шаг 5.1: Найдите раздел «Оплатить и получить»</h4>
+                      <p>На главной странице Alipay нажмите на кнопку «Оплатить и получить»</p>
                       <div className="gp-screenshot gp-screenshot-sm">
                         <Image 
                           src="/assets/tbank-step1.svg" 
@@ -243,8 +254,8 @@ export function TbankGuidePage() {
                     </div>
 
                     <div className="gp-substep">
-                      <h4>Шаг 5.2: Выберите "Прием платежей"</h4>
-                      <p>В открывшемся меню выберите "Прием платежей"</p>
+                      <h4>Шаг 5.2: Выберите «Прием платежей»</h4>
+                      <p>В открывшемся меню выберите «Прием платежей»</p>
                       <div className="gp-screenshot gp-screenshot-sm">
                         <Image 
                           src="/assets/tbank-step2.svg" 
@@ -258,7 +269,7 @@ export function TbankGuidePage() {
 
                     <div className="gp-substep">
                       <h4>Шаг 5.3: Сохраните QR-код</h4>
-                      <p>Ваш личный QR-код для получения платежей. Нажмите "Сохранить изображение"</p>
+                      <p>Ваш личный QR-код для получения платежей. Нажмите «Сохранить изображение»</p>
                       <div className="gp-screenshot gp-screenshot-sm">
                         <Image 
                           src="/assets/tbank-step1.svg" 

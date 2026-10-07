@@ -10,14 +10,29 @@ type ShotProps = {
   width: number
   height: number
   caption?: string
+  priority?: boolean
 }
 
-function Shot({ src, alt, width, height, caption }: ShotProps) {
+function Shot({ src, alt, width, height, caption, priority }: ShotProps) {
   const ratio = width / height
   const shape = ratio < 0.85 ? 'phone' : ratio < 1.25 ? 'square' : 'wide'
+  const sizes =
+    shape === 'phone'
+      ? '(max-width: 360px) 100vw, 320px'
+      : shape === 'square'
+        ? '(max-width: 500px) 100vw, 460px'
+        : '(max-width: 760px) 100vw, 720px'
   return (
     <figure className={'gp-figure gp-figure-' + shape}>
-      <Image src={src} alt={alt} width={width} height={height} className="gp-shot" />
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        sizes={sizes}
+        priority={priority}
+        className="gp-shot"
+      />
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   )
@@ -64,10 +79,11 @@ export function ChinaTaxiGuidePage() {
             {/* Вступление */}
             <div className="gp-block">
               <Shot
-                src="/assets/china-taxi/01-hero.png"
-                alt="Заказ такси через DiDi в Китае"
-                width={1059}
-                height={503}
+                src="/assets/covers/taxi.jpg"
+                alt="Обложка: такси в Китае, DiDi"
+                width={1248}
+                height={832}
+                priority
               />
               <h2>Коротко о главном</h2>
               <p>

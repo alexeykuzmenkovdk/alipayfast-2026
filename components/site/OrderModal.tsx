@@ -143,10 +143,26 @@ export function OrderModal({ order, onClose }: { order: OrderPayload | null; onC
               </div>
               <div className="num">{num}</div>
               <ol>
-                <li>Менеджер напишет в {ch === 'tg' ? 'Telegram' : 'WhatsApp'} в течение пары минут</li>
+                <li>
+                  {ch === 'tg'
+                    ? 'Админ @whaledator напишет Вам в Telegram, как только увидит сообщение'
+                    : 'Админ напишет Вам в WhatsApp, как только увидит сообщение'}
+                </li>
                 <li>Пришлёт реквизиты для перевода {fmt(o.rub)} ₽ через Т-Банк</li>
                 <li>Вы отправляете чек — юани приходят на Alipay</li>
               </ol>
+              <div className="m-note">
+                Если ответа нет — во избежание технических сбоев продублируйте заявку: напишите{' '}
+                <a
+                  href="https://t.me/whaledator"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--red)', textDecoration: 'underline' }}
+                >
+                  @whaledator
+                </a>{' '}
+                в Telegram.
+              </div>
               <a
                 className="btn btn-ink"
                 style={{ width: '100%', height: 56 }}

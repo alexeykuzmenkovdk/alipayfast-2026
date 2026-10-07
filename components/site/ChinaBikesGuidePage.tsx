@@ -10,14 +10,29 @@ type ShotProps = {
   width: number
   height: number
   caption?: string
+  priority?: boolean
 }
 
-function Shot({ src, alt, width, height, caption }: ShotProps) {
+function Shot({ src, alt, width, height, caption, priority }: ShotProps) {
   const ratio = width / height
   const shape = ratio < 0.85 ? 'phone' : ratio < 1.25 ? 'square' : 'wide'
+  const sizes =
+    shape === 'phone'
+      ? '(max-width: 360px) 100vw, 320px'
+      : shape === 'square'
+        ? '(max-width: 500px) 100vw, 460px'
+        : '(max-width: 760px) 100vw, 720px'
   return (
     <figure className={'gp-figure gp-figure-' + shape}>
-      <Image src={src} alt={alt} width={width} height={height} className="gp-shot" />
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        sizes={sizes}
+        priority={priority}
+        className="gp-shot"
+      />
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   )
@@ -60,11 +75,11 @@ export function ChinaBikesGuidePage() {
             {/* Вступление */}
             <div className="gp-block">
               <Shot
-                src="/assets/china-bikes/bike-01.jpg"
-                alt="Прокатные велосипеды на улице китайского города"
-                width={1080}
-                height={1440}
-                caption="Прокатные велосипеды встречаются в Китае буквально на каждом шагу"
+                src="/assets/covers/bikes.jpg"
+                alt="Обложка: аренда байка в Китае"
+                width={1248}
+                height={832}
+                priority
               />
               <h2>Почему это удобно</h2>
               <p>
