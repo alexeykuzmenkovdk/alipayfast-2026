@@ -24,3 +24,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# загруженные чеки и фото товаров (мини-приложение)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# заявки с сайта содержат персональные данные клиентов
+/data/site-orders.json

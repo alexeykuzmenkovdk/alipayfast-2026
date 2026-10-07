@@ -42,6 +42,9 @@ export function TelegramSection() {
             <a className="btn tg-btn" href="https://t.me/alipayfast" target="_blank">
               <TgIcon size={18} /> Подписаться
             </a>
+            <a className="btn btn-line" href="https://t.me/AlipayFastBot/alipayfast" target="_blank" rel="noreferrer">
+              Открыть мини-приложение
+            </a>
             <button className="btn tg-copy" onClick={copy}>
               {copied ? 'Ссылка скопирована ✓' : 't.me/alipayfast'}
             </button>

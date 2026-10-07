@@ -1,5 +1,6 @@
+import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
-import { sendTelegramMessage } from '@/lib/telegram'
+import { deliver, flushQueue, saveOrder, type SiteOrder } from '@/lib/site-orders'
 
 interface OrderData {
   orderNumber: string
@@ -13,43 +14,58 @@ interface OrderData {
   comment?: string
 }
 
-// Заявка на пополнение с сайта -> уведомление в Telegram.
+// Заявка с сайта: сначала сохраняем, потом уведомляем Telegram.
+// Если Telegram недоступен (сервер в РФ), заявка остаётся в очереди
+// и досылается позже — клиент всё равно видит «заявка принята».
 export async function POST(request: Request) {
   try {
     const data: OrderData = await request.json()
 
-    const message = `
-<b>🔔 Новая заявка на пополнение Alipay!</b>
+    if (!data?.contact?.trim() || !data?.orderNumber) {
+      return NextResponse.json({ success: false, error: 'Не заполнены обязательные поля' }, { status: 400 })
+    }
 
-<b>Номер заявки:</b> ${data.orderNumber}
-<b>Имя клиента:</b> ${data.name || '—'}
-<b>Контакт:</b> ${data.contact} (${data.contactMethod})
-${data.telegramUsername ? `<b>Ник в Telegram:</b> ${data.telegramUsername.startsWith('@') ? data.telegramUsername : '@' + data.telegramUsername}` : ''}
-<b>Сумма:</b> ${data.yuanAmount} CNY (${data.rubleAmount} RUB)
-<b>Курс:</b> ${data.exchangeRate} RUB
-${data.comment ? `<b>Комментарий:</b> ${data.comment}` : ''}
+    const order: SiteOrder = {
+      id: randomUUID(),
+      orderNumber: String(data.orderNumber),
+      name: String(data.name ?? ''),
+      contact: String(data.contact),
+      contactMethod: String(data.contactMethod ?? 'Telegram'),
+      telegramUsername: data.telegramUsername ? String(data.telegramUsername) : undefined,
+      yuanAmount: String(data.yuanAmount ?? ''),
+      rubleAmount: String(data.rubleAmount ?? ''),
+      exchangeRate: Number(data.exchangeRate ?? 0),
+      comment: data.comment ? String(data.comment) : undefined,
+      createdAt: new Date().toISOString(),
+      telegram: { status: 'pending', attempts: 0 },
+    }
 
-<i>Дата и время:</i> ${new Date().toLocaleString('ru-RU')}
-`.trim()
+    saveOrder(order)
+    const result = await deliver(order)
 
-    const result = await sendTelegramMessage(message)
+    // Попутно досылаем то, что зависло раньше.
+    void flushQueue()
+
+    if (result.sent) {
+      return NextResponse.json({ success: true, message: 'Заявка отправлена в Telegram' })
+    }
 
     if (result.demo) {
       return NextResponse.json({
         success: true,
         demo: true,
-        message: 'Демо-режим: уведомление было бы отправлено в Telegram',
+        message: 'Демо-режим: заявка сохранена, уведомление не отправлено',
         setupRequired: true,
-        setupInstructions:
-          'Добавьте TELEGRAM_SITE_BOT_TOKEN и TELEGRAM_SITE_CHAT_ID в переменные окружения.',
+        setupInstructions: 'Добавьте TELEGRAM_SITE_BOT_TOKEN и TELEGRAM_SITE_CHAT_ID в переменные окружения.',
       })
     }
 
-    if (result.success) {
-      return NextResponse.json({ success: true, message: 'Заявка успешно отправлена в Telegram' })
-    }
-
-    return NextResponse.json({ success: false, error: result.error }, { status: 400 })
+    console.error('[SITE-ORDER] Заявка сохранена, но Telegram недоступен:', result.error)
+    return NextResponse.json({
+      success: true,
+      queued: true,
+      message: 'Заявка принята. Уведомление оператору уйдёт автоматически.',
+    })
   } catch (error) {
     console.error('[SERVER] Ошибка обработки заявки:', error)
     return NextResponse.json(

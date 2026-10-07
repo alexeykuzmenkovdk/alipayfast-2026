@@ -1,9 +1,13 @@
-// Отправка уведомлений в Telegram (заявки с сайта, изменения курса).
+// Уведомления о заявках с сайта и изменениях курса.
+// Все обращения к Telegram идут через lib/net.ts → при необходимости через прокси.
+
+import { telegramRequest, parseTelegramResponse, proxyUrl, telegramApiBase } from '@/lib/net'
 
 export interface SendResult {
   success: boolean
   demo?: boolean
   error?: string
+  viaProxy?: boolean
 }
 
 export function telegramCreds() {
@@ -31,30 +35,31 @@ export async function sendTelegramMessage(message: string): Promise<SendResult> 
     }
   }
 
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
-    })
+  const response = await telegramRequest(`${telegramApiBase()}/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+    timeoutMs: 10000,
+  })
 
-    const data = await response.json()
-    if (!data.ok) {
-      console.error('[TELEGRAM] Ошибка API:', data.description)
-      return {
-        success: false,
-        error:
-          data.description?.includes('chat not found')
-            ? 'Чат не найден. Проверьте TELEGRAM_SITE_CHAT_ID и напишите боту первым.'
-            : data.description || 'Ошибка отправки сообщения в Telegram',
-      }
-    }
-    return { success: true }
-  } catch (error) {
-    console.error('[TELEGRAM] Ошибка отправки:', error)
+  const data = parseTelegramResponse(response)
+
+  if (!data.ok) {
+    const description = data.description ?? 'Ошибка отправки сообщения в Telegram'
+    console.error('[TELEGRAM] Ошибка API:', description, response.viaProxy ? '(через прокси)' : '(напрямую)')
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Неизвестная ошибка при отправке сообщения',
+      viaProxy: response.viaProxy,
+      error: description.includes('chat not found')
+        ? 'Чат не найден. Проверьте TELEGRAM_SITE_CHAT_ID и напишите боту первым.'
+        : description,
     }
   }
+
+  return { success: true, viaProxy: response.viaProxy }
+}
+
+export function proxyInfo() {
+  const url = proxyUrl()
+  return url ? { enabled: true, url } : { enabled: false, url: '' }
 }

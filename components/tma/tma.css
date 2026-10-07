@@ -1,0 +1,791 @@
+/* Telegram Mini App — тот же визуальный язык, что и сайт (бумага / тушь / красный). */
+
+.tma {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+
+/* Верхняя панель */
+.tma-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px var(--pad);
+  background: color-mix(in oklab, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.tma-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  background: var(--red);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 17px;
+}
+.tma-top-txt {
+  min-width: 0;
+}
+.tma-title {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+.tma-user {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tma-rate {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 13px;
+  border: 1px solid var(--line);
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+.tma-rate b {
+  font-weight: 600;
+}
+
+/* Вкладки */
+.tma-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 63px;
+  z-index: 19;
+  background: var(--paper);
+}
+.tma-tab {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 14px 4px;
+  color: var(--muted);
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  text-align: center;
+}
+.tma-tab:hover {
+  color: var(--ink);
+}
+.tma-tab.on {
+  color: var(--ink);
+  border-bottom-color: var(--red);
+}
+
+.tma-body {
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+}
+
+/* Карточки */
+.tma-card {
+  border: 1.5px solid var(--ink);
+  background: #fff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tma-card.paper {
+  background: var(--paper-2);
+  border-color: var(--line);
+}
+.tma-card.dark {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.tma-h {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 22px;
+  line-height: 1;
+}
+.tma-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.tma-card.dark .tma-sub {
+  color: rgba(242, 234, 219, 0.66);
+}
+.tma-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  display: block;
+}
+.tma-label span {
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* Поля */
+.tma-input,
+.tma-textarea {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  padding: 0 12px;
+  height: 50px;
+  font-size: 16px;
+  outline: 0;
+  color: inherit;
+}
+.tma-textarea {
+  height: auto;
+  min-height: 96px;
+  padding: 12px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.45;
+}
+.tma-input:focus,
+.tma-textarea:focus {
+  border-color: var(--ink);
+}
+.tma-input[type='file'] {
+  height: auto;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--mono);
+}
+.tma-input::placeholder,
+.tma-textarea::placeholder {
+  color: color-mix(in oklab, var(--muted) 70%, transparent);
+}
+
+/* Кнопки */
+.tma-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--red);
+  color: #fff;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+  width: 100%;
+}
+.tma-btn:hover:not(:disabled) {
+  background: #c92414;
+}
+.tma-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+.tma-btn.line {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.tma-btn.line:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+.tma-btn.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px solid var(--line);
+}
+.tma-btn.ghost:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.tma-btn.danger {
+  background: transparent;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+}
+.tma-btn.danger:hover:not(:disabled) {
+  background: var(--red);
+  color: #fff;
+}
+.tma-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tma-row {
+  display: flex;
+  gap: 8px;
+}
+.tma-row .tma-btn {
+  flex: 1;
+}
+
+/* Курс и уровни */
+.tma-rate-box {
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.tma-rate-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tma-rate-line b {
+  font-weight: 600;
+}
+.tma-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Список / строки данных */
+.tma-kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.tma-kv > div > span {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.tma-kv > div > b {
+  font-size: 16px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* Плашки статусов */
+.tma-pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tma-pill.red {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+.tma-pill.ok {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.tma-pill.mute {
+  color: var(--muted);
+}
+
+/* Этап оплаты */
+.tma-step {
+  border: 1.5px solid var(--red);
+  background: color-mix(in oklab, var(--red) 6%, #fff);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tma-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.tma-check input {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  flex: none;
+  accent-color: var(--red);
+}
+
+/* Шаги */
+.tma-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tma-step-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.tma-step-row b {
+  font-weight: 600;
+}
+
+/* Чат */
+.tma-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.tma-msg {
+  max-width: 86%;
+  border: 1px solid var(--line);
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tma-msg.admin {
+  align-self: flex-end;
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.tma-msg.meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.tma-msg.admin .tma-msg.meta {
+  color: rgba(242, 234, 219, 0.6);
+}
+
+/* Витрина */
+.tma-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.tma-item {
+  border: 1.5px solid var(--ink);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.tma-item img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  background: var(--paper-2);
+  border-bottom: 1.5px solid var(--ink);
+}
+.tma-item-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.tma-item-title {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.25;
+}
+.tma-benefit {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+}
+.tma-item-foot {
+  margin-top: auto;
+}
+
+/* Профиль */
+.tma-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tma-avatar {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border: 1.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 20px;
+  background: var(--paper-2);
+}
+
+/* Сообщения о состоянии */
+.tma-empty {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px 0;
+}
+.tma-alert {
+  border: 1.5px solid var(--ink);
+  background: var(--paper-2);
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.tma-alert.err {
+  border-color: var(--red);
+  color: var(--red);
+  background: color-mix(in oklab, var(--red) 7%, #fff);
+}
+.tma-alert.ok {
+  border-color: #2db34a;
+  background: color-mix(in oklab, #2db34a 8%, #fff);
+}
+.tma-loading {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.tma-foot {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+/* ── Комната сделки ───────────────────────────────────────── */
+
+.tma-room {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tma-room-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tma-step-title {
+  display: block;
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+/* сумма к оплате */
+.tma-pay-amount {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(36px, 10vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+/* строки реквизитов с копированием */
+.tma-copy-list {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--ink);
+  background: #fff;
+}
+.tma-copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s;
+}
+.tma-copy-row:last-child {
+  border-bottom: 0;
+}
+.tma-copy-row:active {
+  background: var(--paper-2);
+}
+.tma-copy-row > span {
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.tma-copy-row b {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  word-break: break-all;
+}
+.tma-copy-row em {
+  flex: none;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--red);
+  border: 1px solid currentColor;
+  padding: 4px 7px;
+}
+
+.tma-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.tma-receipt {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--red);
+  text-decoration: underline;
+}
+
+/* ожидание оператора */
+.tma-wait {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.tma-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: tmaPulse 1.6s infinite;
+}
+@keyframes tmaPulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Большое окно чата ────────────────────────────────────── */
+
+.tma-chat-card {
+  border: 1.5px solid var(--ink);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 62vh;
+}
+.tma-chat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.tma-chat-big {
+  flex: 1;
+  max-height: none;
+  padding: 14px;
+  gap: 12px;
+}
+.tma-chat-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1.5px solid var(--ink);
+  background: var(--paper-2);
+  align-items: flex-end;
+}
+.tma-chat-input .tma-textarea {
+  background: #fff;
+  min-height: 56px;
+  max-height: 140px;
+}
+.tma-chat-input .tma-btn {
+  width: auto;
+  height: 56px;
+  flex: none;
+  padding: 0 18px;
+}
+
+/* системное сообщение (приветствие с правилами) */
+.tma-system {
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+/* ── Панель оператора ─────────────────────────────────────── */
+
+.tma-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--line);
+}
+.tma-quick-btn {
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 7px 10px;
+  max-width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tma-quick-btn:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--paper-2);
+}
+.tma-quick-btn:disabled {
+  opacity: 0.5;
+}
+
+.adm-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.adm-stat {
+  border: 1.5px solid var(--ink);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.adm-stat > span {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.adm-stat > b {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1;
+}
+.adm-stat > em,
+.adm-stat > i {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.adm-stat > i {
+  color: var(--muted);
+}
+
+.adm-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 130px;
+  padding-top: 8px;
+}
+.adm-bar {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 3px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.adm-bar-fill {
+  width: 100%;
+  min-height: 3px;
+  background: var(--red);
+}
+.adm-bar > span {
+  font-family: var(--mono);
+  font-size: 10px;
+  order: -1;
+}
+.adm-bar > i {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .tma-tab {
+    font-size: 10px;
+    letter-spacing: 0.03em;
+  }
+  .tma-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
