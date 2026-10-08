@@ -52,8 +52,10 @@ export function TelegramMiniApp() {
   const [archive, setArchive] = useState<ArchivedOrder[]>([])
   const [archiveLoaded, setArchiveLoaded] = useState(false)
 
-  const [rubAmount, setRubAmount] = useState(50000)
-  const [cnyAmount, setCnyAmount] = useState(4000)
+  // Суммы НЕ предзаполняем: пока клиент не ввёл сумму сам, курс не рассчитан,
+  // и заявку создать нельзя (иначе уходила бы сделка с чужим/дефолтным курсом).
+  const [rubAmount, setRubAmount] = useState<number | null>(null)
+  const [cnyAmount, setCnyAmount] = useState<number | null>(null)
   const [contactPhone, setContactPhone] = useState('')
 
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
@@ -79,7 +81,13 @@ export function TelegramMiniApp() {
     [rates.tiers, rates.isManual, rates.manualRate, rates.baseRate],
   )
 
-  const currentRate = useMemo(() => rateForCny(cnyAmount), [cnyAmount, rateForCny])
+  const currentRate = useMemo(
+    () => (cnyAmount && cnyAmount > 0 ? rateForCny(cnyAmount) : rates.baseRate),
+    [cnyAmount, rateForCny, rates.baseRate],
+  )
+  // Сумма считается введённой, только когда обе стороны > 0. До этого кнопку
+  // «Создать заявку» держим выключенной.
+  const amountEntered = rubAmount != null && rubAmount > 0 && cnyAmount != null && cnyAmount > 0
   const activeStep = useMemo(
     () => steps.find((step) => step.status === 'WAITING_FOR_PAYMENT' || step.status === 'WAITING_FOR_DETAILS'),
     [steps],
@@ -167,21 +175,45 @@ export function TelegramMiniApp() {
   }, [telegramReady, fetchActiveOrder, fetchArchive])
 
   const handleRubChange = (raw: string) => {
-    const parsed = Number(raw.replace(/[^\d]/g, ''))
-    if (!Number.isFinite(parsed)) return
+    const digits = raw.replace(/[^\d]/g, '')
+    if (!digits) {
+      setRubAmount(null)
+      setCnyAmount(null)
+      return
+    }
+    const parsed = Number(digits)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setRubAmount(null)
+      setCnyAmount(null)
+      return
+    }
     setRubAmount(parsed)
     const rate = rateForRub(parsed)
     setCnyAmount(Math.round(parsed / rate))
   }
 
   const handleCnyChange = (raw: string) => {
-    const parsed = Number(raw.replace(/[^\d]/g, ''))
-    if (!Number.isFinite(parsed)) return
+    const digits = raw.replace(/[^\d]/g, '')
+    if (!digits) {
+      setCnyAmount(null)
+      setRubAmount(null)
+      return
+    }
+    const parsed = Number(digits)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setCnyAmount(null)
+      setRubAmount(null)
+      return
+    }
     setCnyAmount(parsed)
     setRubAmount(Math.round(parsed * rateForCny(parsed)))
   }
 
   const createOrder = async () => {
+    if (rubAmount == null || cnyAmount == null || rubAmount <= 0 || cnyAmount <= 0) {
+      setNotice({ kind: 'err', text: 'Сначала введите сумму обмена — курс рассчитается автоматически.' })
+      return
+    }
     setBusy(true)
     setNotice(null)
     try {
@@ -384,8 +416,9 @@ export function TelegramMiniApp() {
                   <span>Отдаю, ₽</span>
                   <input
                     className="tma-input"
-                    value={rubAmount.toLocaleString('ru-RU')}
+                    value={rubAmount == null ? '' : rubAmount.toLocaleString('ru-RU')}
                     inputMode="numeric"
+                    placeholder="Введите сумму в рублях"
                     onChange={(event) => handleRubChange(event.target.value)}
                   />
                 </label>
@@ -394,8 +427,9 @@ export function TelegramMiniApp() {
                   <span>Получаю, ¥</span>
                   <input
                     className="tma-input"
-                    value={cnyAmount.toLocaleString('ru-RU')}
+                    value={cnyAmount == null ? '' : cnyAmount.toLocaleString('ru-RU')}
                     inputMode="numeric"
+                    placeholder="Рассчитается автоматически"
                     onChange={(event) => handleCnyChange(event.target.value)}
                   />
                 </label>
@@ -413,7 +447,7 @@ export function TelegramMiniApp() {
                 <div className="tma-rate-box">
                   <div className="tma-rate-line tma-rate-main">
                     <span>Ваш курс</span>
-                    <b>{currentRate.toFixed(2)} ₽</b>
+                    <b>{amountEntered ? `${currentRate.toFixed(2)} ₽` : '—'}</b>
                   </div>
                   <div className="tma-hint">Чем крупнее сумма — тем выгоднее курс:</div>
                   <div className="tma-rate-tiers">
@@ -427,9 +461,17 @@ export function TelegramMiniApp() {
                   <div className="tma-hint">Обновлено {rates.updatedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
 
-                <button className="tma-btn" type="button" disabled={busy || !dbReady || Boolean(authError)} onClick={createOrder}>
+                <button
+                  className="tma-btn"
+                  type="button"
+                  disabled={busy || !dbReady || Boolean(authError) || !amountEntered}
+                  onClick={createOrder}
+                >
                   Создать заявку
                 </button>
+                {!amountEntered && (
+                  <div className="tma-hint">Введите сумму обмена — кнопка станет активной, а курс рассчитается по уровню суммы.</div>
+                )}
               </section>
 
               <section className="tma-card paper">
