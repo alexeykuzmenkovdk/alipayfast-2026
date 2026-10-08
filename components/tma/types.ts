@@ -12,6 +12,16 @@ export interface Order {
   contactUsername?: string | null
   contactPhone?: string | null
   createdAt: string
+  // Приходят из /api/admin/orders — показываем последнюю реплику в списке заявок.
+  messageCount?: number
+  lastMessage?: string | null
+}
+
+// Ник клиента для селектора: @username, телефон или запасной ID Telegram.
+export function orderContact(order: Order) {
+  if (order.contactUsername) return `@${order.contactUsername}`
+  if (order.contactPhone) return order.contactPhone
+  return `ID ${order.userId}`
 }
 
 export interface PaymentStep {

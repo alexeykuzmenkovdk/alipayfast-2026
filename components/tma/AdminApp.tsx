@@ -1,7 +1,19 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ORDER_STATUS, STEP_STATUS, fmtCny, fmtDateTime, fmtRub, fmtTime, isImageUrl, type Order, type OrderMessage, type PaymentStep } from './types'
+import {
+  ORDER_STATUS,
+  STEP_STATUS,
+  fmtCny,
+  fmtDateTime,
+  fmtRub,
+  fmtTime,
+  isImageUrl,
+  orderContact,
+  type Order,
+  type OrderMessage,
+  type PaymentStep,
+} from './types'
 import { useTelegram } from './useTelegram'
 
 interface Stats {
@@ -109,7 +121,11 @@ export function AdminApp() {
     setDenied(null)
     const data = await res.json()
     setOrders(data.orders ?? [])
-    setSelectedId((prev) => (status === 'active' && prev && data.orders?.some((o: Order) => o.id === prev) ? prev : data.orders?.[0]?.id ?? ''))
+    // Держим выбранную заявку при фоновом обновлении; при смене вкладки или
+    // если заявка ушла из списка — встаём на первую.
+    setSelectedId((prev) =>
+      prev && data.orders?.some((o: Order) => o.id === prev) ? prev : data.orders?.[0]?.id ?? '',
+    )
   }, [tab, telegram.headers])
 
   const loadStats = useCallback(async () => {
@@ -365,6 +381,40 @@ export function AdminApp() {
 
       <main className="tma-body">
         {notice && <div className={`tma-alert ${notice.kind === 'err' ? 'err' : 'ok'}`}>{notice.text}</div>}
+
+        {tab !== 'stats' && orders.length > 0 && (
+          <section className="tma-picker">
+            <div className="tma-picker-head">
+              <b className="tma-step-title">{tab === 'active' ? 'Заявки' : 'Архив'}</b>
+              <span className="tma-hint">{orders.length} шт.</span>
+            </div>
+            <div className="tma-picker-list">
+              {orders.map((order) => (
+                <button
+                  key={order.id}
+                  type="button"
+                  className={`tma-pick${order.id === selectedId ? ' on' : ''}`}
+                  onClick={() => setSelectedId(order.id)}
+                >
+                  <span className="tma-pick-main">
+                    <b className="tma-pick-nick">{orderContact(order)}</b>
+                    <span className="tma-pick-meta">
+                      {fmtRub(order.totalRub)} · {fmtDateTime(order.createdAt)}
+                    </span>
+                    {order.lastMessage && <span className="tma-pick-last">{order.lastMessage}</span>}
+                  </span>
+                  <span
+                    className={`tma-pill ${
+                      order.status === 'COMPLETED' ? 'ok' : order.status === 'CANCELED' ? 'mute' : 'red'
+                    }`}
+                  >
+                    {ORDER_STATUS[order.status]}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {tab === 'stats' && (
           <>

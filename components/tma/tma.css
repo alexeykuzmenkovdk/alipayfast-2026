@@ -338,6 +338,78 @@
   color: var(--muted);
 }
 
+/* Селектор заявок оператора */
+.tma-picker {
+  border: 1.5px solid var(--ink);
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tma-picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tma-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.tma-pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: transparent;
+  padding: 10px 12px;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tma-pick:hover {
+  border-color: var(--ink);
+}
+.tma-pick.on {
+  border-color: var(--red);
+  background: color-mix(in oklab, var(--red) 6%, #fff);
+}
+.tma-pick-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tma-pick-nick {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tma-pick-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.tma-pick-last {
+  max-width: 100%;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tma-pick .tma-pill {
+  flex: none;
+}
+
 /* Архив сделок */
 .tma-arch-list {
   display: flex;
