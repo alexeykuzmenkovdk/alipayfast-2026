@@ -215,8 +215,10 @@ function mapSourcing(row: Row): SourcingRequest {
 export async function getActiveOrder(userId: number) {
   await ensureReady()
   const pool = getPool()
+  // updated_at, а не created_at: если оператор вернул сделку из архива в
+  // работу, клиент должен увидеть именно её как актуальную активную заявку.
   const result = await pool.query(
-    `SELECT * FROM orders WHERE user_id = $1 AND status IN ('CREATED', 'IN_PROGRESS') ORDER BY created_at DESC LIMIT 1`,
+    `SELECT * FROM orders WHERE user_id = $1 AND status IN ('CREATED', 'IN_PROGRESS') ORDER BY updated_at DESC LIMIT 1`,
     [userId],
   )
   return result.rows[0] ? mapOrder(result.rows[0]) : undefined
@@ -742,4 +744,33 @@ export async function adminCancelOrder(orderId: string) {
     [orderId, now],
   )
   return result.rows[0] ? mapOrder(result.rows[0]) : undefined
+}
+
+// Смена статуса оператором из архива: отмена (сделка не идёт в статистику),
+// пометка завершённой, либо возврат в активные. Этапы правим согласованно,
+// чтобы активная сделка не осталась без ожидающих оплаты шагов.
+export async function setOrderStatus(orderId: string, status: OrderStatus) {
+  await ensureReady()
+  const pool = getPool()
+  const now = new Date().toISOString()
+  const result = await pool.query(
+    'UPDATE orders SET status = $2, updated_at = $3 WHERE id = $1 RETURNING *',
+    [orderId, status, now],
+  )
+  if (!result.rows[0]) return undefined
+
+  if (status === 'CANCELED') {
+    await pool.query(
+      "UPDATE payment_steps SET status = 'CANCELED', updated_at = $2 WHERE order_id = $1 AND status != 'VERIFIED'",
+      [orderId, now],
+    )
+  } else if (status === 'IN_PROGRESS' || status === 'CREATED') {
+    // Возврат в работу: ранее отменённые этапы снова ждут оплаты.
+    await pool.query(
+      "UPDATE payment_steps SET status = 'WAITING_FOR_PAYMENT', updated_at = $2 WHERE order_id = $1 AND status = 'CANCELED'",
+      [orderId, now],
+    )
+  }
+
+  return mapOrder(result.rows[0])
 }

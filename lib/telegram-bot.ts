@@ -48,6 +48,17 @@ export function dealRoomKeyboard() {
   }
 }
 
+// Кнопка для оператора: уведомление о сообщении клиента должно вести в панель
+// оператора, а не в клиентское мини-приложение.
+export function adminRoomKeyboard() {
+  const webAppUrl = process.env.ADMIN_MINI_APP_URL
+  if (!webAppUrl) return undefined
+  if (webAppUrl.startsWith('https://')) {
+    return { inline_keyboard: [[{ text: 'Открыть панель оператора', web_app: { url: webAppUrl } }]] }
+  }
+  return { inline_keyboard: [[{ text: 'Открыть панель оператора', url: webAppUrl }]] }
+}
+
 export async function sendMessage(payload: SendMessagePayload) {
   const token = getBotToken()
   const response = await telegramRequest(`${apiBase()}/bot${token}/sendMessage`, {

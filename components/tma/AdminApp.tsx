@@ -361,6 +361,23 @@ export function AdminApp() {
     }
   }
 
+  // Смена статуса из архива: отмена (не идёт в статистику), завершение или
+  // возврат в активные. После возврата сделка снова появится у клиента.
+  const changeStatus = async (status: 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED') => {
+    if (!selectedId) return
+    const okText =
+      status === 'CANCELED'
+        ? 'Сделка отменена и не учитывается в статистике'
+        : status === 'COMPLETED'
+          ? 'Сделка отмечена завершённой'
+          : 'Сделка возвращена в активные'
+    const ok = await act(`/api/admin/orders/${selectedId}/status`, 'POST', { status }, okText)
+    if (ok) {
+      await loadOrders()
+      await loadDeal(selectedId)
+    }
+  }
+
   if (!telegram.ready) {
     return <div className="tma-loading">Загружаем панель оператора…</div>
   }
@@ -534,6 +551,34 @@ export function AdminApp() {
                 </div>
               </div>
             </section>
+
+            {tab === 'archive' && (
+              <section className="tma-card">
+                <b className="tma-step-title">Статус сделки</b>
+                <p className="tma-sub">
+                  Текущий статус: <b>{ORDER_STATUS[selected.status]}</b>. Отменённая сделка не учитывается
+                  в статистике. Возврат в активные снова покажет её клиенту в приложении.
+                </p>
+                <div className="tma-row">
+                  {selected.status !== 'CANCELED' && (
+                    <button className="tma-btn danger" type="button" disabled={busy} onClick={() => changeStatus('CANCELED')}>
+                      Отменить
+                    </button>
+                  )}
+                  {selected.status !== 'COMPLETED' && (
+                    <button className="tma-btn" type="button" disabled={busy} onClick={() => changeStatus('COMPLETED')}>
+                      Завершить
+                    </button>
+                  )}
+                  {selected.status !== 'IN_PROGRESS' && (
+                    <button className="tma-btn line" type="button" disabled={busy} onClick={() => changeStatus('IN_PROGRESS')}>
+                      Вернуть в активные
+                    </button>
+                  )}
+                </div>
+                <div className="tma-hint">Изменение статуса клиенту приходит уведомлением в Telegram.</div>
+              </section>
+            )}
 
             {tab === 'active' && !confirmStep && (
               <section className="tma-card">

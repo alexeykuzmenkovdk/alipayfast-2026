@@ -435,6 +435,31 @@
   font-size: 14px;
   letter-spacing: 0.04em;
 }
+.tma-arch.clickable {
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tma-arch.clickable:hover,
+.tma-arch.clickable:focus-visible {
+  border-color: var(--ink);
+  background: var(--paper-2);
+  outline: none;
+}
+.tma-arch-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tma-arch-open {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--red);
+  white-space: nowrap;
+}
 
 /* Этап оплаты */
 .tma-step {

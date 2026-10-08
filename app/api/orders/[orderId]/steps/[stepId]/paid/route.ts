@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { markStepPaid } from '@/lib/store'
+import { getOrderById, markStepPaid } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
 import { requireTelegramInitData } from '@/lib/tma'
-import { notifyAsync } from '@/lib/telegram-bot'
+import { notifyAsync, adminRoomKeyboard } from '@/lib/telegram-bot'
 
 export async function POST(
   request: Request,
@@ -17,6 +17,15 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Отмечать оплату можно только в своей заявке.
+  const order = await getOrderById(params.orderId)
+  if (!order) {
+    return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+  }
+  if (order.userId !== telegram.user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   const body = await request.json()
   const step = await markStepPaid(params.orderId, params.stepId, body.receiptFileUrl || undefined)
   if (!step) {
@@ -29,6 +38,7 @@ export async function POST(
     notifyAsync(
       Number(adminId),
       `✅ Клиент отметил оплату (${who})\nЗаявка #${params.orderId.slice(0, 6)}, этап ${step.stepIndex}\n\nПроверьте чек в админке.`,
+      adminRoomKeyboard(),
     )
   }
 

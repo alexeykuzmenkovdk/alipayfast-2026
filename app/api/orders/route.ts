@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createOrder, getActiveOrder, listOrderMessages, listOrderSteps } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
 import { telegramAuth } from '@/lib/tma'
-import { notifyAsync } from '@/lib/telegram-bot'
+import { notifyAsync, adminRoomKeyboard } from '@/lib/telegram-bot'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,6 +60,7 @@ export async function POST(request: Request) {
         '',
         'Откройте админку, чтобы прислать реквизиты.',
       ].join('\n'),
+      adminRoomKeyboard(),
     )
   }
 

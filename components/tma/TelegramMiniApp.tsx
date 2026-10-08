@@ -51,6 +51,12 @@ export function TelegramMiniApp() {
 
   const [archive, setArchive] = useState<ArchivedOrder[]>([])
   const [archiveLoaded, setArchiveLoaded] = useState(false)
+  // Открытая архивная сделка: история + переписка с оператором.
+  const [archiveRoom, setArchiveRoom] = useState<{
+    order: Order
+    steps: PaymentStep[]
+    messages: OrderMessage[]
+  } | null>(null)
 
   // Суммы НЕ предзаполняем: пока клиент не ввёл сумму сам, курс не рассчитан,
   // и заявку создать нельзя (иначе уходила бы сделка с чужим/дефолтным курсом).
@@ -173,6 +179,30 @@ export function TelegramMiniApp() {
     }, 10000)
     return () => window.clearInterval(id)
   }, [telegramReady, fetchActiveOrder, fetchArchive])
+
+  // Пока открыта архивная сделка — обновляем её переписку с оператором.
+  useEffect(() => {
+    const orderId = archiveRoom?.order.id
+    if (!orderId || !telegramReady) return
+    const id = window.setInterval(() => {
+      fetch(`/api/orders/${orderId}/messages`, { headers: apiHeaders, cache: 'no-store' })
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.messages)) {
+            setArchiveRoom((prev) =>
+              prev && prev.order.id === orderId ? { ...prev, messages: data.messages } : prev,
+            )
+          }
+        })
+        .catch(() => null)
+    }, 5000)
+    return () => window.clearInterval(id)
+  }, [archiveRoom?.order.id, apiHeaders, telegramReady])
+
+  // Уход с вкладки «Архив» закрывает открытую сделку.
+  useEffect(() => {
+    if (tab !== 'archive') setArchiveRoom(null)
+  }, [tab])
 
   const handleRubChange = (raw: string) => {
     const digits = raw.replace(/[^\d]/g, '')
@@ -298,19 +328,30 @@ export function TelegramMiniApp() {
     }
   }
 
-  const sendMessage = async (text: string, fileUrl?: string) => {
+  // Добавляем сообщение в нужный список — активной сделки или открытой архивной.
+  const appendMessage = useCallback(
+    (orderId: string, message: OrderMessage) => {
+      if (order && order.id === orderId) setMessages((prev) => [...prev, message])
+      setArchiveRoom((prev) =>
+        prev && prev.order.id === orderId ? { ...prev, messages: [...prev.messages, message] } : prev,
+      )
+    },
+    [order],
+  )
+
+  const sendMessage = async (orderId: string, text: string, fileUrl?: string) => {
     const trimmed = text.trim()
-    if (!order || (!trimmed && !fileUrl)) return
+    if (!orderId || (!trimmed && !fileUrl)) return
     setBusy(true)
     try {
-      const res = await fetch(`/api/orders/${order.id}/messages`, {
+      const res = await fetch(`/api/orders/${orderId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...apiHeaders },
         body: JSON.stringify({ text: trimmed || undefined, fileUrl }),
       })
       if (res.ok) {
         const data = await res.json()
-        setMessages((prev) => [...prev, data.message])
+        appendMessage(orderId, data.message)
       } else {
         setNotice({ kind: 'err', text: 'Сообщение не отправилось, попробуйте ещё раз.' })
       }
@@ -320,8 +361,8 @@ export function TelegramMiniApp() {
   }
 
   // Загрузка вложения для чата: клиент может прислать картинку/файл оператору.
-  const sendChatFile = async (file: File) => {
-    if (!order) return
+  const sendChatFile = async (orderId: string, file: File) => {
+    if (!orderId) return
     setBusy(true)
     try {
       const url = await uploadFile(file)
@@ -329,20 +370,47 @@ export function TelegramMiniApp() {
         setNotice({ kind: 'err', text: 'Не удалось загрузить файл.' })
         return
       }
-      const res = await fetch(`/api/orders/${order.id}/messages`, {
+      const res = await fetch(`/api/orders/${orderId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...apiHeaders },
         body: JSON.stringify({ fileUrl: url }),
       })
       if (res.ok) {
         const data = await res.json()
-        setMessages((prev) => [...prev, data.message])
+        appendMessage(orderId, data.message)
       } else {
         setNotice({ kind: 'err', text: 'Файл не отправился, попробуйте ещё раз.' })
       }
     } finally {
       setBusy(false)
     }
+  }
+
+  // Открытие архивной сделки: подтягиваем её этапы и переписку.
+  const openArchive = async (orderId: string) => {
+    setBusy(true)
+    setNotice(null)
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { headers: apiHeaders, cache: 'no-store' })
+      if (!res.ok) {
+        if (res.status === 401) setAuthError(await readAuthReason(res))
+        setNotice({ kind: 'err', text: 'Не удалось открыть сделку.' })
+        return
+      }
+      const data = await res.json()
+      if (data.order) {
+        setArchiveRoom({ order: data.order, steps: data.steps ?? [], messages: data.messages ?? [] })
+      }
+    } catch {
+      setNotice({ kind: 'err', text: 'Ошибка сети при открытии сделки.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const closeArchive = () => {
+    setArchiveRoom(null)
+    setReceiptUrl(null)
   }
 
   if (!telegramReady || rates.loading) {
@@ -398,8 +466,8 @@ export function TelegramMiniApp() {
               messages={messages}
               busy={busy}
               receiptUrl={receiptUrl}
-              onSend={sendMessage}
-              onSendFile={sendChatFile}
+              onSend={(text, fileUrl) => sendMessage(order.id, text, fileUrl)}
+              onSendFile={(file) => sendChatFile(order.id, file)}
               onCancel={cancelOrder}
               onReceipt={handleReceipt}
               onMarkPaid={markPaid}
@@ -488,64 +556,99 @@ export function TelegramMiniApp() {
             </>
           ))}
 
-        {tab === 'archive' && (
-          <section className="tma-card">
-            <h2 className="tma-h">Архив сделок</h2>
+        {tab === 'archive' &&
+          (archiveRoom ? (
+            <div className="tma-room">
+              <button className="tma-btn ghost" type="button" onClick={closeArchive}>
+                ← К архиву сделок
+              </button>
+              <DealRoom
+                order={archiveRoom.order}
+                steps={archiveRoom.steps}
+                messages={archiveRoom.messages}
+                busy={busy}
+                receiptUrl={null}
+                onSend={(text, fileUrl) => sendMessage(archiveRoom.order.id, text, fileUrl)}
+                onSendFile={(file) => sendChatFile(archiveRoom.order.id, file)}
+                onCancel={() => undefined}
+                onReceipt={() => undefined}
+                onMarkPaid={() => undefined}
+              />
+            </div>
+          ) : (
+            <section className="tma-card">
+              <h2 className="tma-h">Архив сделок</h2>
 
-            {!archiveLoaded && <p className="tma-sub">Загружаем сделки…</p>}
+              {!archiveLoaded && <p className="tma-sub">Загружаем сделки…</p>}
 
-            {archiveLoaded && archive.length === 0 && (
-              <p className="tma-sub">
-                Здесь появятся ваши закрытые сделки: завершённые и отменённые заявки с суммами и датами.
-              </p>
-            )}
-
-            {archive.length > 0 && (
-              <>
+              {archiveLoaded && archive.length === 0 && (
                 <p className="tma-sub">
-                  Завершено {archivedTotals.completed} из {archive.length} · итого{' '}
-                  {fmtRub(archivedTotals.rub)} → {fmtCny(archivedTotals.cny)}
+                  Здесь появятся ваши закрытые сделки: завершённые и отменённые заявки с суммами и датами.
                 </p>
+              )}
 
-                <div className="tma-arch-list">
-                  {archive.map((item) => (
-                    <article key={item.id} className="tma-arch">
-                      <div className="tma-arch-head">
-                        <b>#{item.id.slice(0, 6)}</b>
-                        <span className={`tma-pill ${item.status === 'COMPLETED' ? 'ok' : 'mute'}`}>
-                          {ORDER_STATUS[item.status]}
-                        </span>
-                      </div>
+              {archive.length > 0 && (
+                <>
+                  <p className="tma-sub">
+                    Завершено {archivedTotals.completed} из {archive.length} · итого{' '}
+                    {fmtRub(archivedTotals.rub)} → {fmtCny(archivedTotals.cny)}
+                  </p>
+                  <p className="tma-hint">Нажмите на сделку, чтобы открыть чат с оператором.</p>
 
-                      <div className="tma-kv">
-                        <div>
-                          <span>Отдано</span>
-                          <b>{fmtRub(item.paidRub > 0 ? item.paidRub : item.totalRub)}</b>
+                  <div className="tma-arch-list">
+                    {archive.map((item) => (
+                      <article
+                        key={item.id}
+                        className="tma-arch clickable"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openArchive(item.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            openArchive(item.id)
+                          }
+                        }}
+                      >
+                        <div className="tma-arch-head">
+                          <b>#{item.id.slice(0, 6)}</b>
+                          <span className={`tma-pill ${item.status === 'COMPLETED' ? 'ok' : 'mute'}`}>
+                            {ORDER_STATUS[item.status]}
+                          </span>
                         </div>
-                        <div>
-                          <span>Получено</span>
-                          <b>{fmtCny(item.totalCny)}</b>
-                        </div>
-                        <div>
-                          <span>Курс сделки</span>
-                          <b>{Number(item.rate).toFixed(2)} ₽</b>
-                        </div>
-                        <div>
-                          <span>{item.status === 'COMPLETED' ? 'Завершена' : 'Отменена'}</span>
-                          <b>{fmtDateTime(item.updatedAt)}</b>
-                        </div>
-                      </div>
 
-                      <div className="tma-hint">
-                        {item.stepsCount > 0 ? `Этапов оплаты: ${item.stepsCount}` : 'Оплата одним платежом'}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
-        )}
+                        <div className="tma-kv">
+                          <div>
+                            <span>Отдано</span>
+                            <b>{fmtRub(item.paidRub > 0 ? item.paidRub : item.totalRub)}</b>
+                          </div>
+                          <div>
+                            <span>Получено</span>
+                            <b>{fmtCny(item.totalCny)}</b>
+                          </div>
+                          <div>
+                            <span>Курс сделки</span>
+                            <b>{Number(item.rate).toFixed(2)} ₽</b>
+                          </div>
+                          <div>
+                            <span>{item.status === 'COMPLETED' ? 'Завершена' : 'Отменена'}</span>
+                            <b>{fmtDateTime(item.updatedAt)}</b>
+                          </div>
+                        </div>
+
+                        <div className="tma-arch-foot">
+                          <span className="tma-hint">
+                            {item.stepsCount > 0 ? `Этапов оплаты: ${item.stepsCount}` : 'Оплата одним платежом'}
+                          </span>
+                          <span className="tma-arch-open">Открыть чат →</span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          ))}
 
         {tab === 'profile' && (
           <>

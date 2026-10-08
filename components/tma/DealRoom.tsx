@@ -242,7 +242,7 @@ export function DealRoom({
         </section>
       )}
 
-      {steps.length > 1 && (
+      {(steps.length > 1 || (closed && steps.length > 0)) && (
         <section className="tma-card">
           <b className="tma-step-title">Этапы сделки</b>
           <div className="tma-steps">
