@@ -94,6 +94,8 @@ export function AdminApp() {
   // Подтверждение перед отправкой реквизитов: оператор видит ровно то,
   // что уйдёт клиенту, и не отправляет чужие/пустые данные по ошибке.
   const [confirmStep, setConfirmStep] = useState(false)
+  // Сделка с неоплаченными этапами: показываем кнопку принудительного завершения.
+  const [forceComplete, setForceComplete] = useState(false)
   // Последние реквизиты оператора — подставляются ЯВНО по кнопке, не молча.
   const [lastReqs, setLastReqs] = useState<{ bankName: string; receiptEmail: string } | null>(null)
 
@@ -185,6 +187,7 @@ export function AdminApp() {
   // чтобы не отправить данные одной сделки в другую.
   useEffect(() => {
     setConfirmStep(false)
+    setForceComplete(false)
     setStepForm({ amountRub: '', method: 'SBP', requisiteValue: '', bankName: '', receiptEmail: '' })
   }, [selectedId])
 
@@ -311,14 +314,47 @@ export function AdminApp() {
     }
   }
 
-  const finish = async (action: 'complete' | 'cancel') => {
+  // Обычное завершение проходит, только когда все этапы подтверждены. Если
+  // клиент не нажал «Оплатил» — оператор может завершить принудительно.
+  const completeDeal = async (force: boolean) => {
     if (!selectedId) return
-    const ok = await act(
-      `/api/admin/orders/${selectedId}/${action}`,
-      'POST',
-      undefined,
-      action === 'complete' ? 'Сделка завершена и ушла в архив' : 'Сделка отменена',
-    )
+    setBusy(true)
+    setNotice(null)
+    try {
+      const res = await fetch(`/api/admin/orders/${selectedId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...telegram.headers },
+        body: JSON.stringify({ force }),
+      })
+      if (res.status === 401) {
+        setDenied(await deniedReasonFrom(res))
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (data.error === 'Active steps exist') {
+          setForceComplete(true)
+          setNotice({
+            kind: 'err',
+            text: 'В сделке есть неоплаченные этапы. Клиент не нажал «Оплатил»? Завершите сделку принудительно — этапы будут помечены подтверждёнными.',
+          })
+        } else {
+          setNotice({ kind: 'err', text: data.error ?? 'Не получилось завершить сделку' })
+        }
+        return
+      }
+      setForceComplete(false)
+      setNotice({ kind: 'ok', text: force ? 'Сделка завершена принудительно и ушла в архив' : 'Сделка завершена и ушла в архив' })
+      await loadOrders()
+      await loadDeal(selectedId)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const finish = async (action: 'cancel') => {
+    if (!selectedId) return
+    const ok = await act(`/api/admin/orders/${selectedId}/${action}`, 'POST', undefined, 'Сделка отменена')
     if (ok) {
       await loadOrders()
       await loadDeal(selectedId)
@@ -739,13 +775,18 @@ export function AdminApp() {
             {tab === 'active' && (
               <section className="tma-card">
                 <div className="tma-row">
-                  <button className="tma-btn" type="button" disabled={busy} onClick={() => finish('complete')}>
+                  <button className="tma-btn" type="button" disabled={busy} onClick={() => completeDeal(false)}>
                     Завершить сделку
                   </button>
                   <button className="tma-btn danger" type="button" disabled={busy} onClick={() => finish('cancel')}>
                     Отменить
                   </button>
                 </div>
+                {forceComplete && (
+                  <button className="tma-btn danger" type="button" disabled={busy} onClick={() => completeDeal(true)}>
+                    {busy ? 'Завершаем…' : 'Завершить принудительно (клиент не нажал «Оплатил»)'}
+                  </button>
+                )}
                 <div className="tma-hint">Завершённые сделки уходят в архив и попадают в статистику.</div>
               </section>
             )}

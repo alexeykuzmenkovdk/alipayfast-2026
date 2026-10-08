@@ -704,15 +704,26 @@ export async function verifyPaymentStep(orderId: string, stepId: string) {
   return result.rows[0] ? mapStep(result.rows[0]) : undefined
 }
 
-export async function completeOrder(orderId: string) {
+export async function completeOrder(orderId: string, options?: { force?: boolean }) {
   await ensureReady()
   const pool = getPool()
-  const blocking = await pool.query(
-    "SELECT 1 FROM payment_steps WHERE order_id = $1 AND status IN ('WAITING_FOR_PAYMENT', 'PAID') LIMIT 1",
-    [orderId],
-  )
-  if (blocking.rowCount && blocking.rowCount > 0) {
-    return { error: 'Active steps exist' as const }
+  if (options?.force) {
+    // Принудительное завершение: клиент не нажал «Оплатил», но оператор
+    // подтверждает, что деньги фактически получены. Незавершённые этапы
+    // помечаем подтверждёнными, чтобы архив и статистика оставались честными.
+    const now = new Date().toISOString()
+    await pool.query(
+      "UPDATE payment_steps SET status = 'VERIFIED', updated_at = $2 WHERE order_id = $1 AND status != 'CANCELED'",
+      [orderId, now],
+    )
+  } else {
+    const blocking = await pool.query(
+      "SELECT 1 FROM payment_steps WHERE order_id = $1 AND status IN ('WAITING_FOR_PAYMENT', 'PAID') LIMIT 1",
+      [orderId],
+    )
+    if (blocking.rowCount && blocking.rowCount > 0) {
+      return { error: 'Active steps exist' as const }
+    }
   }
   const now = new Date().toISOString()
   const result = await pool.query(

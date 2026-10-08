@@ -13,7 +13,9 @@ export async function POST(request: Request, { params }: { params: { orderId: st
     return NextResponse.json({ error: 'Database is not configured' }, { status: 503 })
   }
 
-  const result = await completeOrder(params.orderId)
+  // force = клиент не нажал «Оплатил», но оператор завершает сделку принудительно.
+  const body = (await request.json().catch(() => null)) as { force?: boolean } | null
+  const result = await completeOrder(params.orderId, { force: Boolean(body?.force) })
   if (!result) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 })
   }
