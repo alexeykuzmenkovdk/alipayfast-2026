@@ -31,3 +31,11 @@ next-env.d.ts
 
 # заявки с сайта содержат персональные данные клиентов
 /data/site-orders.json
+# настройки курса, выставленные оператором (рантайм-состояние)
+/data/exchange-settings.json
+
+# бот-постер: секреты, состояние и цитаты не коммитим
+/bot/.env
+/bot/subscribers.db
+/bot/text.txt
+/bot/.venv/

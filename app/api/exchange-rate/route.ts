@@ -5,22 +5,35 @@ import { recordDailyRate } from '@/lib/exchange-history'
 
 export const dynamic = 'force-dynamic'
 
-// Текущий курс: базовый курс ЦБ РФ + надбавка по уровню суммы (или ручной курс из админки).
-export async function GET(request: Request) {
-  const now = new Date()
-  const { searchParams } = new URL(request.url)
-  const forceUpdate = searchParams.get('forceUpdate') === 'true'
+interface BaseRateCache {
+  baseRate: number
+  cbrDate: string
+  fallback: boolean
+  expiresAt: number
+}
 
-  const settings = settingsStore.getSettings()
+// Базовый курс ЦБ кэшируем в памяти процесса: иначе каждый заход на сайт и
+// каждый опрос бота-постера (раз в 5 минут) бил бы в cbr.ru. Надбавки при этом
+// не кэшируются — они считаются из актуальных настроек на каждый запрос,
+// поэтому смена надбавки в админке видна сразу.
+let baseCache: BaseRateCache | null = null
 
-  const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1)
+const DAY_MS = 24 * 60 * 60 * 1000
+
+async function resolveBaseRate(force: boolean): Promise<BaseRateCache> {
+  const now = Date.now()
+  if (!force && baseCache && now < baseCache.expiresAt) {
+    return baseCache
+  }
+
+  const date = new Date(now)
+  const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
     .toString()
-    .padStart(2, '0')}/${now.getFullYear()}`
-
+    .padStart(2, '0')}/${date.getFullYear()}`
   const url = `https://www.cbr.ru/scripts/XML_daily.asp?date_req=${formattedDate}`
 
   let baseRate: number
-  let cbrDate = now.toISOString()
+  let cbrDate = date.toISOString()
   let fallback = false
 
   try {
@@ -47,19 +60,33 @@ export async function GET(request: Request) {
       cbrDate = `${year}-${month}-${day}T00:00:00.000Z`
     }
 
-    recordDailyRate(baseRate, now)
+    recordDailyRate(baseRate, date)
   } catch (error) {
     console.error('[SERVER] Ошибка получения курса от ЦБ РФ:', error)
     fallback = true
     baseRate = EXCHANGE_CONFIG.FALLBACK_RATE
   }
 
+  // Запасной курс кэшируем ненадолго, чтобы ЦБ мог восстановиться.
+  const ttl = fallback ? 60_000 : EXCHANGE_CONFIG.CACHE_DURATION
+  baseCache = { baseRate, cbrDate, fallback, expiresAt: Date.now() + ttl }
+  return baseCache
+}
+
+// Текущий курс: базовый курс ЦБ РФ + надбавка по уровню суммы (или ручной курс из админки).
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const forceUpdate = searchParams.get('forceUpdate') === 'true'
+
+  const settings = settingsStore.getSettings()
+  const { baseRate, cbrDate, fallback } = await resolveBaseRate(forceUpdate)
+
   const tiers = buildRateTiersWithSettings(baseRate, settings)
-  const bestRate = tiers.reduce((min, t) => Math.min(min, t.rate), Number.POSITIVE_INFINITY)
+  const bestRate = tiers.reduce((min, tier) => Math.min(min, tier.rate), Number.POSITIVE_INFINITY)
 
   // Курс обновляется ежедневно в 10:00 по Владивостоку (UTC+10) — это ровно
   // 00:00 UTC, поэтому следующее обновление — начало следующих суток UTC.
-  const DAY_MS = 24 * 60 * 60 * 1000
+  const now = new Date()
   const nextUpdate = new Date(Math.floor(now.getTime() / DAY_MS) * DAY_MS + DAY_MS)
 
   return NextResponse.json({

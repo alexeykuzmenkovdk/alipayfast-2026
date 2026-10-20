@@ -1,0 +1,16 @@
+[Unit]
+Description=AlipayFast poster bot (курс в Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/alipayfast/bot
+ExecStart=/opt/alipayfast/bot/.venv/bin/python /opt/alipayfast/bot/poster_bot.py
+Restart=always
+RestartSec=5
+# .env читает сам бот через python-dotenv
+User=root
+
+[Install]
+WantedBy=multi-user.target
