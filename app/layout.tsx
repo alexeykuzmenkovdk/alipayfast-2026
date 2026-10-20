@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { RatesProvider } from '@/components/site/rates-context'
+import { YandexMetrika } from '@/components/site/YandexMetrika'
 import { COMPANY, FULL_ADDRESS } from '@/lib/company'
 import { organizationGraph, jsonLd } from '@/lib/seo'
 
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body data-theme="white">
         <RatesProvider>{children}</RatesProvider>
+        <YandexMetrika />
       </body>
     </html>
   )
