@@ -97,10 +97,12 @@ DB_PATH = _env("DB_PATH", os.path.join(BASE_DIR, "subscribers.db"))
 CONTROL_TOKEN = _env("CONTROL_TOKEN")
 CONTROL_PORT = int(_env("CONTROL_PORT", "8081") or "8081")
 
-# Telegram-команды (/post_today, /sync) требуют polling. По умолчанию выключен:
-# если бот использует тот же токен, что бот сайта/мини-аппа, polling сломал бы
-# вебхук. Включать только для ОТДЕЛЬНОГО бота.
-ENABLE_POLLING = _env("POSTER_ENABLE_POLLING", "0") == "1"
+# Управление через ОТДЕЛЬНОГО бота (например, @alipayvdkbot).
+# Отдельный токен нужен потому, что у бота-постера может быть вебхук —
+# polling второго бота с ним не конфликтует.
+CONTROL_BOT_TOKEN = _env("CONTROL_BOT_TOKEN")
+# Кому разрешены команды: ID через запятую. Пусто — берётся ADMIN_USER_ID.
+CONTROL_ADMIN_IDS_RAW = _env("CONTROL_ADMIN_IDS")
 
 TZ = ZoneInfo("Asia/Vladivostok")
 
@@ -118,11 +120,16 @@ if TELEGRAM_API_BASE:
 
     _session_kwargs["api"] = TelegramAPIServer.from_base(TELEGRAM_API_BASE)
 
-bot = Bot(
-    token=BOT_TOKEN,
-    session=AiohttpSession(**_session_kwargs),
-    default=DefaultBotProperties(parse_mode="Markdown"),
-)
+def build_bot(token: str) -> Bot:
+    return Bot(
+        token=token,
+        session=AiohttpSession(**_session_kwargs),
+        default=DefaultBotProperties(parse_mode="Markdown"),
+    )
+
+
+# Бот, который публикует и правит сообщения в группе.
+bot = build_bot(BOT_TOKEN)
 
 _LINK_PREVIEW_OFF = LinkPreviewOptions(is_disabled=True)
 
@@ -642,10 +649,19 @@ async def run_control_server() -> None:
 
 
 # =========================
-# OPTIONAL TELEGRAM POLLING
+# CONTROL BOT (@alipayvdkbot)
 # =========================
-def _token_shared_with_site() -> bool:
-    """Проверяет, не занят ли токен ботом сайта/мини-аппа (у них вебхук).
+HELP_TEXT = (
+    "Управление постером AlipayFast\n\n"
+    "/status — курс с сайта и состояние последнего поста\n"
+    "/sync — привести последнее сообщение к курсу сайта\n"
+    "/post_today — опубликовать сейчас (следующая цитата)\n"
+    "/help — это сообщение"
+)
+
+
+def _token_used_by_site(token: str) -> bool:
+    """Не занят ли токен ботом сайта/мини-аппа (у них на сервере вебхук).
 
     Смотрим и переменные окружения, и `.env` сайта (``../.env``), чтобы защита
     работала, даже если бот запущен отдельным процессом без env сайта.
@@ -659,45 +675,110 @@ def _token_shared_with_site() -> bool:
         tokens.update((values.get(key) or "").strip() for key in keys)
 
     tokens.discard("")
-    return BOT_TOKEN in tokens
+    return token in tokens
 
 
-async def start_polling() -> None:
-    if not ADMIN_USER_ID:
-        log.error("POSTER_ENABLE_POLLING=1, но ADMIN_USER_ID не задан — polling отключён")
+def _parse_admin_ids() -> set[int]:
+    raw = CONTROL_ADMIN_IDS_RAW or _env("ADMIN_USER_ID")
+    ids: set[int] = set()
+    for part in raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            ids.add(int(part))
+        except ValueError:
+            log.warning("Некорректный ID администратора: %s", part)
+    return ids
+
+
+async def start_control_polling() -> None:
+    if not CONTROL_BOT_TOKEN:
+        log.info("CONTROL_BOT_TOKEN не задан — Telegram-управление выключено")
         return
-    if _token_shared_with_site():
+    if CONTROL_BOT_TOKEN == BOT_TOKEN:
+        log.error("CONTROL_BOT_TOKEN совпадает с BOT_TOKEN — нужен отдельный бот")
+        return
+    if _token_used_by_site(CONTROL_BOT_TOKEN):
         log.error(
-            "POSTER_ENABLE_POLLING=1, но BOT_TOKEN совпадает с ботом сайта/мини-аппа. "
-            "Polling отключён, чтобы не сломать вебхук. Используйте отдельного бота "
-            "или локальные команды /post_today и /sync."
+            "CONTROL_BOT_TOKEN принадлежит боту сайта/мини-аппа (у него вебхук). "
+            "Возьмите токен отдельного бота @alipayvdkbot."
         )
         return
 
+    admins = _parse_admin_ids()
+    if not admins:
+        log.error("Не задан ADMIN_USER_ID или CONTROL_ADMIN_IDS — управление выключено")
+        return
+
+    control_bot = build_bot(CONTROL_BOT_TOKEN)
     dp = Dispatcher()
 
-    @dp.message(Command("post_today"))
-    async def cmd_post_today(message: Message) -> None:
-        if ADMIN_USER_ID and message.from_user and message.from_user.id != ADMIN_USER_ID:
-            await message.answer("⛔ Команда доступна только администратору.")
+    def from_admin(message: Message) -> bool:
+        return bool(message.from_user and message.from_user.id in admins)
+
+    async def deny(message: Message) -> None:
+        await message.answer("⛔ Команда доступна только оператору.", parse_mode=None)
+
+    @dp.message(Command("start", "help"))
+    async def cmd_help(message: Message) -> None:
+        if not from_admin(message):
+            await deny(message)
             return
+        await message.answer(HELP_TEXT, parse_mode=None)
+
+    @dp.message(Command("status"))
+    async def cmd_status(message: Message) -> None:
+        if not from_admin(message):
+            await deny(message)
+            return
+        lines = ["📊 Постер AlipayFast"]
         snapshot = await fetch_site_snapshot()
-        if snapshot is None:
-            await message.answer("Курс сайта недоступен, попробуйте позже.")
-            return
-        await post_with_next_wisdom(snapshot)
-        await message.answer("✅ Сообщение опубликовано.")
+        if snapshot:
+            lines.append(f"Курс на {snapshot.cbr_date}:")
+            for index, tier in enumerate(snapshot.tiers):
+                lines.append(f"  {_tier_label(tier, index)} → {tier.rate:.2f} ₽")
+        else:
+            lines.append("Курс сайта недоступен")
+        last = get_last_post()
+        if last:
+            lines.append(f"Последний пост: {last.post_date or '—'} (message_id {last.message_id})")
+        else:
+            lines.append("Последнего поста ещё нет")
+        wait_s = seconds_until_next_post()
+        next_at = datetime.now(TZ) + timedelta(seconds=wait_s)
+        lines.append(f"Следующий пост: {next_at.strftime('%d.%m.%Y %H:%M')} (Владивосток)")
+        await message.answer("\n".join(lines), parse_mode=None)
 
     @dp.message(Command("sync"))
     async def cmd_sync(message: Message) -> None:
-        if ADMIN_USER_ID and message.from_user and message.from_user.id != ADMIN_USER_ID:
-            await message.answer("⛔ Команда доступна только администратору.")
+        if not from_admin(message):
+            await deny(message)
             return
         result = await sync_last_post(force=True)
-        await message.answer(f"🔄 Синхронизация: {result}")
+        await message.answer(f"🔄 {result}", parse_mode=None)
 
-    log.info("Polling Telegram включён (отдельный бот)")
-    await dp.start_polling(bot)
+    @dp.message(Command("post_today"))
+    async def cmd_post_today(message: Message) -> None:
+        if not from_admin(message):
+            await deny(message)
+            return
+        snapshot = await fetch_site_snapshot()
+        if snapshot is None:
+            await message.answer("Курс сайта недоступен, попробуйте позже.", parse_mode=None)
+            return
+        await post_with_next_wisdom(snapshot)
+        await message.answer("✅ Сообщение опубликовано.", parse_mode=None)
+
+    # У отдельного бота вебхука быть не должно — polling безопасен.
+    # Снимаем на случай, если он остался от прежних экспериментов.
+    try:
+        await control_bot.delete_webhook(drop_pending_updates=False)
+    except Exception as exc:  # noqa: BLE001 — не блокируем запуск управления
+        log.warning("Не удалось снять вебхук у бота управления: %s", exc)
+
+    log.info("Управление подключено: отдельный бот (команды /status, /sync, /post_today)")
+    await dp.start_polling(control_bot)
 
 
 # =========================
@@ -724,11 +805,12 @@ async def main() -> None:
     _WISDOMS = load_wisdoms(WISDOM_FILE)
 
     log.info(
-        "Старт: пост в %02d:%02d Владивосток, курс из %s, прокси %s",
+        "Старт: пост в %02d:%02d Владивосток, курс из %s, прокси %s, управление %s",
         POST_HOUR,
         POST_MINUTE,
         SITE_API_URL,
         TELEGRAM_PROXY_URL or "нет (напрямую)",
+        "отдельным ботом" if CONTROL_BOT_TOKEN else "локально/выключено",
     )
 
     tasks = [
@@ -737,8 +819,8 @@ async def main() -> None:
     ]
     if CONTROL_TOKEN:
         tasks.append(asyncio.create_task(_supervise("control", run_control_server)))
-    if ENABLE_POLLING:
-        tasks.append(asyncio.create_task(_supervise("polling", start_polling)))
+    if CONTROL_BOT_TOKEN:
+        tasks.append(asyncio.create_task(_supervise("control-bot", start_control_polling)))
 
     await asyncio.gather(*tasks)
 
