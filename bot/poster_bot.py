@@ -53,6 +53,21 @@ def _env(name: str, default: str = "") -> str:
     return (os.getenv(name) or default).strip()
 
 
+def _normalize_proxy(url: str) -> str:
+    """Приводит схему прокси к той, что понимает aiohttp-socks.
+
+    ``socks5h://`` / ``socks4a://`` — синтаксис curl и Node (удалённый DNS).
+    aiohttp-socks таких схем не знает и падает с «Invalid scheme component».
+    Для SOCKS5 резолв имён и так выполняется на стороне прокси, поэтому схему
+    достаточно заменить на ``socks5://`` (аналогично для socks4a).
+    """
+    if url.startswith("socks5h://"):
+        return "socks5://" + url[len("socks5h://") :]
+    if url.startswith("socks4a://"):
+        return "socks4://" + url[len("socks4a://") :]
+    return url
+
+
 BOT_TOKEN = _env("BOT_TOKEN")
 if not BOT_TOKEN:
     raise SystemExit("BOT_TOKEN не задан. Укажите его в bot/.env")
@@ -79,7 +94,8 @@ SITE_API_URL = _env("SITE_API_URL", "http://127.0.0.1:3000/api/exchange-rate")
 SYNC_INTERVAL_SEC = int(_env("SYNC_INTERVAL_SEC", "300") or "300")
 
 # Telegram через VLESS: socks5://127.0.0.1:10808 или http://127.0.0.1:10809.
-TELEGRAM_PROXY_URL = _env("TELEGRAM_PROXY_URL")
+# socks5h:// из .env сайта тоже подойдёт — схему нормализуем ниже.
+TELEGRAM_PROXY_URL = _normalize_proxy(_env("TELEGRAM_PROXY_URL"))
 # Для локальных тестов (как в сайте).
 TELEGRAM_API_BASE = _env("TELEGRAM_API_BASE")
 
