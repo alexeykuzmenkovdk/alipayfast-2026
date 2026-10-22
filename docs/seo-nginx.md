@@ -12,6 +12,13 @@
 ## Конфиг
 
 ```nginx
+# Кэш статики Next.js на диске: после пересборки старые чанки удаляются из .next,
+# но остаются здесь. Открытая у клиента страница со старым HTML продолжает
+# работать, а не показывает белый экран.
+proxy_cache_path /var/cache/nginx/alipayfast_static
+                 levels=1:2 keys_zone=alipayfast_static:20m
+                 max_size=2g inactive=365d use_temp_path=off;
+
 # HTTP → HTTPS + склейка www
 server {
     listen 80;
@@ -64,7 +71,12 @@ server {
     location /_next/static/ {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
+        proxy_cache alipayfast_static;
+        proxy_cache_valid 200 365d;
+        proxy_cache_key "$host$request_uri";
+        proxy_ignore_headers Cache-Control Expires Set-Cookie;
         add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Cache-Status $upstream_cache_status always;
         access_log off;
     }
 
@@ -98,13 +110,21 @@ server {
 
 ## Проверка после применения
 
+Каталог под кэш статики создайте заранее — nginx не создаёт его сам:
+
+```bash
+sudo mkdir -p /var/cache/nginx/alipayfast_static
+sudo chown -R www-data:www-data /var/cache/nginx
+sudo nginx -t && sudo systemctl reload nginx
+```
+
 ```bash
 curl -sI https://www.alipayfast.ru/ | head -1        # ожидаем 301
 curl -sI http://alipayfast.ru/ | head -1             # ожидаем 301
 curl -sI https://alipayfast.ru/ | grep -i strict     # ожидаем HSTS
 curl -s  https://alipayfast.ru/robots.txt            # строка Sitemap: присутствует
 curl -s  https://alipayfast.ru/sitemap.xml | head -5 # lastmod по реальным датам
-curl -sI https://alipayfast.ru/_next/static/...      # Cache-Control: immutable
+curl -sI https://alipayfast.ru/_next/static/...      # Cache-Control: immutable, X-Cache-Status
 ```
 
 Затем в Яндекс.Вебмастере и Google Search Console выбрать главное зеркало
