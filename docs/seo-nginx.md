@@ -75,6 +75,7 @@ server {
         proxy_cache_valid 200 365d;
         proxy_cache_key "$host$request_uri";
         proxy_ignore_headers Cache-Control Expires Set-Cookie;
+        proxy_hide_header Cache-Control;
         add_header Cache-Control "public, max-age=31536000, immutable" always;
         add_header X-Cache-Status $upstream_cache_status always;
         access_log off;
@@ -84,6 +85,7 @@ server {
     location /_next/image {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
+        proxy_hide_header Cache-Control;
         add_header Cache-Control "public, max-age=2592000, stale-while-revalidate=86400" always;
     }
 
@@ -91,9 +93,13 @@ server {
     location /assets/ {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
+        proxy_hide_header Cache-Control;
         add_header Cache-Control "public, max-age=2592000" always;
     }
 
+    # HTML и API не кэшируем. Важно: no-store должен быть только здесь.
+    # Если повесить его на весь server{}, он попадёт и на картинки с чанками,
+    # и тогда браузер заново качает 2–4 МБ при каждом открытии гайда.
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -104,6 +110,8 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 90s;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "no-store" always;
     }
 }
 ```
