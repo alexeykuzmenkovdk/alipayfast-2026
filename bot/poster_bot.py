@@ -37,7 +37,7 @@ from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
+from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError, TelegramRetryAfter
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message
 from dotenv import dotenv_values, load_dotenv
@@ -92,6 +92,11 @@ SITE_API_URL = _env("SITE_API_URL", "http://127.0.0.1:3000/api/exchange-rate")
 
 # Как часто сверять последнее сообщение с сайтом.
 SYNC_INTERVAL_SEC = int(_env("SYNC_INTERVAL_SEC", "300") or "300")
+
+# Сколько минут пытаться опубликовать сегодняшний пост, если Telegram/сайт
+# недоступны в момент 16:00. Раньше одна сетевая ошибка откладывала пост
+# до следующего дня, теперь он догоняется в пределах окна.
+POST_RETRY_WINDOW_MIN = int(_env("POST_RETRY_WINDOW_MIN", "45") or "45")
 
 # Telegram через VLESS: socks5://127.0.0.1:10808 или http://127.0.0.1:10809.
 # socks5h:// из .env сайта тоже подойдёт — схему нормализуем ниже.
@@ -590,6 +595,48 @@ def seconds_until_next_post() -> int:
     return max(1, int((target - now).total_seconds()))
 
 
+async def _publish_today_with_retries() -> None:
+    """Публикует пост, повторяя попытки в пределах POST_RETRY_WINDOW_MIN.
+
+    Сеть до Telegram через VLESS периодически отваливается на 1–10 минут
+    (TelegramNetworkError). Раньше такая ошибка в 16:00 означала, что пост
+    выйдет только на следующий день: цикл уходил спать до 16:00 завтра.
+    """
+    deadline = datetime.now(TZ) + timedelta(minutes=POST_RETRY_WINDOW_MIN)
+    attempt = 0
+
+    while True:
+        if was_posted_today():
+            return
+
+        attempt += 1
+        snapshot = await fetch_with_retry(timeout_min=15)
+        if snapshot is None:
+            log.error("Курс сайта недоступен (попытка %s) — повтор", attempt)
+        else:
+            try:
+                await post_with_next_wisdom(snapshot)
+                return
+            except TelegramRetryAfter as exc:
+                wait_s = int(getattr(exc, "retry_after", 30)) + 1
+                log.warning("Telegram просит подождать %s с (flood control)", wait_s)
+                await asyncio.sleep(wait_s)
+                continue
+            except (TelegramBadRequest, TelegramNetworkError) as exc:
+                log.error("Не удалось опубликовать пост (попытка %s): %s", attempt, exc)
+            except Exception:  # noqa: BLE001 — одна ошибка не должна съедать день
+                log.exception("Неожиданная ошибка публикации (попытка %s)", attempt)
+
+        if datetime.now(TZ) >= deadline:
+            log.error(
+                "Пост за сегодня не опубликован: окно %s мин истекло",
+                POST_RETRY_WINDOW_MIN,
+            )
+            return
+
+        await asyncio.sleep(60)
+
+
 async def daily_post_loop() -> None:
     while True:
         wait_s = seconds_until_next_post()
@@ -601,16 +648,10 @@ async def daily_post_loop() -> None:
             await asyncio.sleep(60)
             continue
 
-        snapshot = await fetch_with_retry(timeout_min=60)
-        if snapshot is None:
-            log.error("Курс недоступен час — сегодняшний пост отложен")
-            await asyncio.sleep(60)
-            continue
-
         try:
-            await post_with_next_wisdom(snapshot)
-        except (TelegramBadRequest, TelegramNetworkError) as exc:
-            log.error("Не удалось опубликовать пост: %s", exc)
+            await _publish_today_with_retries()
+        except Exception:  # noqa: BLE001 — планировщик не должен умирать
+            log.exception("Сбой планировщика публикации")
 
         await asyncio.sleep(60)
 
@@ -622,6 +663,11 @@ async def sync_loop() -> None:
             result = await sync_last_post()
             if result == "обновлено":
                 log.info("Синхронизация с сайтом: %s", result)
+        except TelegramRetryAfter as exc:
+            log.warning(
+                "Синхронизация: Telegram просит подождать %s с",
+                getattr(exc, "retry_after", "?"),
+            )
         except Exception:  # noqa: BLE001 — цикл не должен умирать
             log.exception("Ошибка синхронизации последнего сообщения")
 
