@@ -20,6 +20,51 @@ if (location.pathname.indexOf('/admin') !== 0) {
 }
 `
 
+// Страховка для мини-аппов: если бандл не загрузился или упал, вместо белого
+// экрана показываем причину и кнопку перезагрузки. Сниппет стоит в <head>,
+// поэтому обработчики успевают встать раньше кода приложения.
+const tmaGuardSnippet = `
+(function () {
+  var path = location.pathname;
+  if (path !== '/telegram-mini-app' && path !== '/admin/tg' && path !== '/admin-mini-app') return;
+
+  function show(text) {
+    if (document.getElementById('tma-fail')) return;
+    var box = document.createElement('div');
+    box.id = 'tma-fail';
+    box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:#7a1a1a;color:#fff;padding:14px 16px;font:14px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;';
+    var message = document.createElement('div');
+    message.textContent = text;
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Перезагрузить';
+    button.style.cssText = 'margin-top:10px;padding:8px 14px;border:0;border-radius:8px;background:#fff;color:#7a1a1a;font-weight:600;';
+    button.onclick = function () { location.reload(); };
+    box.appendChild(message);
+    box.appendChild(button);
+    var attach = function () { (document.body || document.documentElement).appendChild(box); };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attach);
+    } else {
+      attach();
+    }
+  }
+
+  window.addEventListener('error', function (event) {
+    if (!event || !event.message || event.message === 'Script error.') return;
+    show('Ошибка приложения: ' + event.message);
+  });
+  window.addEventListener('unhandledrejection', function (event) {
+    var reason = event && event.reason;
+    if (reason && reason.name === 'AbortError') return;
+    show('Ошибка приложения: ' + ((reason && reason.message) || reason || 'неизвестно'));
+  });
+  setTimeout(function () {
+    if (!window.__tmaReady) show('Приложение не загрузилось за 15 секунд. Проверьте связь и нажмите «Перезагрузить».');
+  }, 15000);
+})();
+`
+
 export const metadata: Metadata = {
   metadataBase: new URL(COMPANY.url),
   title: 'Пополнение Alipay юанями из России — выгодный курс и зачисление за 15 минут',
@@ -65,11 +110,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
+        {/* Шрифты грузим асинхронно: <link rel=stylesheet> на fonts.googleapis.com
+            в РФ часто висит и блокирует первую отрисовку — мини-апп оставался
+            белым, пока браузер ждал Google. */}
+        <script
+          id="google-fonts"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap';document.head.appendChild(l);})();`,
+          }}
         />
+        <script id="tma-guard" dangerouslySetInnerHTML={{ __html: tmaGuardSnippet }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd(organizationGraph()) }}

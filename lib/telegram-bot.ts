@@ -105,12 +105,28 @@ export async function answerCallbackQuery(callbackQueryId: string, text?: string
 
 // Отправка уведомления пользователю. Никогда не бросает исключение:
 // уведомление не должно ломать основной сценарий заявки.
+// Сетевые сбои (прокси/Telegram) повторяем один раз — они обычно короткие.
 export async function notify(userId: number, text: string, replyMarkup?: unknown) {
   if (!isBotConfigured() || !userId) return
-  try {
-    await sendMessage({ chat_id: userId, text, reply_markup: replyMarkup })
-  } catch (error) {
-    console.error('[TELEGRAM] Не удалось отправить уведомление:', error)
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const result = await sendMessage({ chat_id: userId, text, reply_markup: replyMarkup })
+      if (result.ok) return
+
+      const reason = String(result.description ?? '')
+      const retryable = /timeout|econn|socket|network|некорректн/i.test(reason)
+      if (!retryable || attempt === 2) {
+        console.error('[TELEGRAM] Уведомление не доставлено:', reason, { userId })
+        return
+      }
+    } catch (error) {
+      if (attempt === 2) {
+        console.error('[TELEGRAM] Не удалось отправить уведомление:', error, { userId })
+        return
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 700))
   }
 }
 

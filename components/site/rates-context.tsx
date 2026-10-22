@@ -42,7 +42,12 @@ export function RatesProvider({ children }: { children: React.ReactNode }) {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/exchange-rate?nocache=${Date.now()}`, { cache: 'no-store' })
+      // Без таймаута зависший запрос курса оставлял мини-апп на экране
+      // «Загружаем…» навсегда — отсюда «приложение висит».
+      const res = await fetch(`/api/exchange-rate?nocache=${Date.now()}`, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10_000),
+      })
       const data = await res.json()
       if (!mounted.current || !res.ok) return
 

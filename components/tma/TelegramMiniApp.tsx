@@ -68,6 +68,10 @@ export function TelegramMiniApp() {
 
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+
+  useEffect(() => {
+    if (telegramReady && !rates.loading) (window as typeof window & { __tmaReady?: boolean }).__tmaReady = true
+  }, [telegramReady, rates.loading])
   // Курс считаем по тому же ранжиру, что и на сайте: уровни берём из tiers
   // (единый источник — lib/exchange-config), а не своей формулой.
   const rateForCny = useCallback(
@@ -348,6 +352,7 @@ export function TelegramMiniApp() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...apiHeaders },
         body: JSON.stringify({ text: trimmed || undefined, fileUrl }),
+        signal: AbortSignal.timeout(20_000),
       })
       if (res.ok) {
         const data = await res.json()
@@ -355,6 +360,8 @@ export function TelegramMiniApp() {
       } else {
         setNotice({ kind: 'err', text: 'Сообщение не отправилось, попробуйте ещё раз.' })
       }
+    } catch {
+      setNotice({ kind: 'err', text: 'Нет связи с сервером. Проверьте интернет и повторите отправку.' })
     } finally {
       setBusy(false)
     }
@@ -374,6 +381,7 @@ export function TelegramMiniApp() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...apiHeaders },
         body: JSON.stringify({ fileUrl: url }),
+        signal: AbortSignal.timeout(20_000),
       })
       if (res.ok) {
         const data = await res.json()
@@ -381,6 +389,8 @@ export function TelegramMiniApp() {
       } else {
         setNotice({ kind: 'err', text: 'Файл не отправился, попробуйте ещё раз.' })
       }
+    } catch {
+      setNotice({ kind: 'err', text: 'Нет связи с сервером. Повторите отправку.' })
     } finally {
       setBusy(false)
     }

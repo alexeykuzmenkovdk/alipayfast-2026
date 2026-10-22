@@ -114,6 +114,10 @@ export function AdminApp() {
   const [lastReqs, setLastReqs] = useState<{ bankName: string; receiptEmail: string } | null>(null)
 
   useEffect(() => {
+    if (telegram.ready) (window as typeof window & { __tmaReady?: boolean }).__tmaReady = true
+  }, [telegram.ready])
+
+  useEffect(() => {
     try {
       const raw = window.localStorage.getItem('adm-last-reqs')
       if (raw) setLastReqs(JSON.parse(raw))
