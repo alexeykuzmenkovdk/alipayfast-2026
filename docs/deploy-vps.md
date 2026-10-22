@@ -712,6 +712,36 @@ sudo systemctl restart alipayfast.service
 sleep 3 && curl -sI http://127.0.0.1:$PORT | head -1
 ```
 
+### Если сайт под pm2, а не под systemd
+
+На текущем сервере `alipayfast.ru` крутится через pm2 от root, юнита
+`alipayfast.service` там нет. Команды обновления в этом случае:
+
+```bash
+cd /opt/alipayfast
+git pull --ff-only
+npm ci && npm run build
+pm2 restart alipayfast
+pm2 save
+pm2 logs alipayfast --lines 50 --err
+```
+
+Проверить, что pm2 поднимается после перезагрузки сервера:
+
+```bash
+systemctl is-enabled pm2-root
+pm2 startup
+```
+
+Приложение должно слушать только localhost. Если в `ss -tlnp` видно
+`*:3000`, перезапустите его с явным хостом:
+
+```bash
+pm2 delete alipayfast
+pm2 start node_modules/next/dist/bin/next --name alipayfast -- start -H 127.0.0.1 -p 3000
+pm2 save
+```
+
 Если после обновления что-то не так — смотрите логи:
 
 ```bash
@@ -719,6 +749,26 @@ sudo journalctl -u alipayfast.service -n 100 --no-pager
 ```
 
 Удобно собрать это в скрипт `$APP_DIR/deploy.sh` и запускать одной командой.
+
+### Проверка состояния одной командой
+
+В репозитории есть `scripts/vps-check.sh`: он сам находит, чем запущен сайт
+(systemd-юнит, pm2 или docker), считает ответы nginx, ищет 5xx, смотрит логи
+бота, проверяет прокси до Telegram, PostgreSQL, диск и память.
+
+```bash
+cd "$APP_DIR" && git pull --ff-only
+sudo bash scripts/vps-check.sh "24 hours ago"
+```
+
+Если скрипт пишет `systemd-юнита сайта нет`, а сайт при этом работает — он
+запущен через pm2. Тогда логи приложения смотрят так:
+
+```bash
+pm2 list
+pm2 logs --lines 200
+pm2 logs alipayfast --lines 200 --err
+```
 
 ---
 
