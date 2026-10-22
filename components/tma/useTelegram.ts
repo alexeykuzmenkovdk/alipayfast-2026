@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-const SCRIPT = 'https://telegram.org/js/telegram-web-app.js'
+// SDK отдаём со своего домена: telegram.org в РФ часто недоступен, и мини-апп
+// оставался без window.Telegram — Telegram показывал белый экран, потому что
+// страница так и не вызывала WebApp.ready().
+const SCRIPT = '/telegram-web-app.js'
+
 
 interface TelegramUser {
   id: number
