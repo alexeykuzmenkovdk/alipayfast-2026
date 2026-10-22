@@ -85,7 +85,7 @@ async function fetchWithTimeout(input: string, init?: RequestInit) {
 
 // Статус доставки ответа оператора. «Прочитано» — клиент открыл чат в
 // мини-приложении: Bot API не отдаёт настоящие read-receipts Telegram.
-function deliveryStatus(message: OrderMessage) {
+function deliveryStatus(message: OrderMessage): string | null {
   if (message.deliveryError) {
     const reason = message.deliveryError.toLowerCase()
     if (reason.includes('blocked')) return '✗ не доставлено: клиент заблокировал бота'
@@ -94,7 +94,9 @@ function deliveryStatus(message: OrderMessage) {
   }
   if (message.readAt) return `✓✓ прочитано ${fmtTime(message.readAt)}`
   if (message.deliveredAt) return `✓ доставлено ${fmtTime(message.deliveredAt)}`
-  return '… отправляем'
+  // Старые сообщения (до появления отметок) не показываем как «отправляем».
+  const age = Date.now() - new Date(message.createdAt).getTime()
+  return age < 120_000 ? '… отправляем' : null
 }
 
 export function AdminApp() {
@@ -831,7 +833,7 @@ export function AdminApp() {
                           </a>
                         )}
                         {message.text && <div className="tma-msg-text">{message.text}</div>}
-                        {message.senderRole === 'admin' && (
+                        {message.senderRole === 'admin' && deliveryStatus(message) && (
                           <div className="tma-msg-status">{deliveryStatus(message)}</div>
                         )}
                       </div>
