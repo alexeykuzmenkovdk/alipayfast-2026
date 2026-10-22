@@ -71,6 +71,12 @@ const EXCLUSIONS: [string, string[]][] = [
   ['no_hash', ['hash']],
 ]
 
+// Telegram считает HMAC по всем полям, кроме hash, поэтому поле signature
+// (Bot API 8+) входит в строку и рабочий вариант для текущих клиентов —
+// decoded/no_hash. decoded/no_hash_signature остаётся запасным для старых
+// сборок, где поля signature ещё нет: там обе строки совпадают.
+const CANONICAL_VARIANTS = new Set(['decoded/no_hash', 'decoded/no_hash_signature'])
+
 function computeHash(dataCheckString: string, botToken: string) {
   const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest()
   return crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex')
@@ -93,7 +99,7 @@ function hashCandidates(initData: string, botToken: string): Record<string, stri
 }
 
 // Возвращает название сработавшего варианта или null. Название нужно только
-// для логов: canonical — decoded/no_hash_signature.
+// для логов: у текущих клиентов это decoded/no_hash.
 export function matchInitData(initData: string, botToken: string): string | null {
   const hash = parseFields(initData).find((field) => field.key === 'hash')?.raw.trim().toLowerCase()
   if (!hash) return null
@@ -167,7 +173,7 @@ export function telegramAuth(initData: string | null): TelegramAuth {
     if (!matched) continue
     if (entry.name !== 'TELEGRAM_MINI_APP_BOT_TOKEN') {
       console.warn('[tma] initData verified with', entry.name, `(${matched})`)
-    } else if (matched !== 'decoded/no_hash_signature') {
+    } else if (!CANONICAL_VARIANTS.has(matched)) {
       console.warn('[tma] initData matched non-canonical variant:', matched)
     }
     const parsed = getTelegramUser(initData)

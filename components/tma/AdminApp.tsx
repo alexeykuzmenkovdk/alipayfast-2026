@@ -68,6 +68,20 @@ function deniedText(reason: string) {
   return `Сервер отклонил доступ (${reason}).`
 }
 
+// В Telegram WebView запрос иногда «залипает» без ответа: оператор видит
+// вечный спиннер вместо ошибки. Жёсткий таймаут возвращает управление.
+const REQUEST_TIMEOUT_MS = 20000
+
+async function fetchWithTimeout(input: string, init?: RequestInit) {
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    window.clearTimeout(timer)
+  }
+}
+
 export function AdminApp() {
   const telegram = useTelegram()
 
@@ -115,47 +129,62 @@ export function AdminApp() {
 
   const loadOrders = useCallback(async () => {
     const status = tab === 'active' ? 'active' : 'archive'
-    const res = await fetch(`/api/admin/orders?status=${status}`, { headers: telegram.headers, cache: 'no-store' })
-    if (res.status === 401) {
-      setDenied(await deniedReasonFrom(res))
+    try {
+      const res = await fetchWithTimeout(`/api/admin/orders?status=${status}`, {
+        headers: telegram.headers,
+        cache: 'no-store',
+      })
+      if (res.status === 401) {
+        setDenied(await deniedReasonFrom(res))
+        return
+      }
+      setDenied(null)
+      const data = await res.json()
+      setOrders(data.orders ?? [])
+      // Держим выбранную заявку при фоновом обновлении; при смене вкладки или
+      // если заявка ушла из списка — встаём на первую.
+      setSelectedId((prev) =>
+        prev && data.orders?.some((o: Order) => o.id === prev) ? prev : data.orders?.[0]?.id ?? '',
+      )
+    } catch {
       return
     }
-    setDenied(null)
-    const data = await res.json()
-    setOrders(data.orders ?? [])
-    // Держим выбранную заявку при фоновом обновлении; при смене вкладки или
-    // если заявка ушла из списка — встаём на первую.
-    setSelectedId((prev) =>
-      prev && data.orders?.some((o: Order) => o.id === prev) ? prev : data.orders?.[0]?.id ?? '',
-    )
   }, [tab, telegram.headers])
 
   const loadStats = useCallback(async () => {
-    const res = await fetch('/api/admin/stats', { headers: telegram.headers, cache: 'no-store' })
-    if (res.status === 401) {
-      setDenied(await deniedReasonFrom(res))
+    try {
+      const res = await fetchWithTimeout('/api/admin/stats', { headers: telegram.headers, cache: 'no-store' })
+      if (res.status === 401) {
+        setDenied(await deniedReasonFrom(res))
+        return
+      }
+      setDenied(null)
+      setStats(await res.json())
+    } catch {
       return
     }
-    setDenied(null)
-    setStats(await res.json())
   }, [telegram.headers])
 
   const loadDeal = useCallback(
     async (orderId: string) => {
       if (!orderId) return
-      const [orderRes, messagesRes] = await Promise.all([
-        fetch(`/api/admin/orders/${orderId}`, { headers: telegram.headers, cache: 'no-store' }),
-        fetch(`/api/admin/orders/${orderId}/messages`, { headers: telegram.headers, cache: 'no-store' }),
-      ])
-      if (orderRes.status === 401 || messagesRes.status === 401) {
-        setDenied(await deniedReasonFrom(orderRes.status === 401 ? orderRes : messagesRes))
+      try {
+        const [orderRes, messagesRes] = await Promise.all([
+          fetchWithTimeout(`/api/admin/orders/${orderId}`, { headers: telegram.headers, cache: 'no-store' }),
+          fetchWithTimeout(`/api/admin/orders/${orderId}/messages`, { headers: telegram.headers, cache: 'no-store' }),
+        ])
+        if (orderRes.status === 401 || messagesRes.status === 401) {
+          setDenied(await deniedReasonFrom(orderRes.status === 401 ? orderRes : messagesRes))
+          return
+        }
+        setDenied(null)
+        const orderData = await orderRes.json()
+        const messagesData = await messagesRes.json()
+        setSteps(orderData.steps ?? [])
+        setMessages(messagesData.messages ?? [])
+      } catch {
         return
       }
-      setDenied(null)
-      const orderData = await orderRes.json()
-      const messagesData = await messagesRes.json()
-      setSteps(orderData.steps ?? [])
-      setMessages(messagesData.messages ?? [])
     },
     [telegram.headers],
   )
@@ -195,7 +224,7 @@ export function AdminApp() {
     setBusy(true)
     setNotice(null)
     try {
-      const res = await fetch(path, {
+      const res = await fetchWithTimeout(path, {
         method,
         headers: { 'Content-Type': 'application/json', ...telegram.headers },
         body: payload ? JSON.stringify(payload) : undefined,
@@ -212,6 +241,15 @@ export function AdminApp() {
       setDenied(null)
       if (okText) setNotice({ kind: 'ok', text: okText })
       return true
+    } catch (error) {
+      const aborted = (error as Error)?.name === 'AbortError'
+      setNotice({
+        kind: 'err',
+        text: aborted
+          ? 'Сервер не ответил за 20 секунд. Проверьте связь и повторите отправку.'
+          : 'Нет связи с сервером. Проверьте интернет и повторите отправку.',
+      })
+      return false
     } finally {
       setBusy(false)
     }
@@ -270,7 +308,12 @@ export function AdminApp() {
   const uploadFile = async (file: File) => {
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch('/api/uploads', { method: 'POST', headers: telegram.headers, body: form })
+    let res: Response
+    try {
+      res = await fetchWithTimeout('/api/uploads', { method: 'POST', headers: telegram.headers, body: form })
+    } catch {
+      return null
+    }
     if (res.status === 401) {
       setDenied(await deniedReasonFrom(res))
       return null
@@ -290,7 +333,7 @@ export function AdminApp() {
         setNotice({ kind: 'err', text: 'Не удалось загрузить файл' })
         return
       }
-      const res = await fetch(`/api/admin/orders/${selectedId}/messages`, {
+      const res = await fetchWithTimeout(`/api/admin/orders/${selectedId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...telegram.headers },
         body: JSON.stringify({ fileUrl: url }),
@@ -300,6 +343,8 @@ export function AdminApp() {
       } else {
         setNotice({ kind: 'err', text: 'Файл не отправился' })
       }
+    } catch {
+      setNotice({ kind: 'err', text: 'Нет связи с сервером. Повторите отправку.' })
     } finally {
       setBusy(false)
     }
@@ -321,7 +366,7 @@ export function AdminApp() {
     setBusy(true)
     setNotice(null)
     try {
-      const res = await fetch(`/api/admin/orders/${selectedId}/complete`, {
+      const res = await fetchWithTimeout(`/api/admin/orders/${selectedId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...telegram.headers },
         body: JSON.stringify({ force }),
@@ -347,6 +392,8 @@ export function AdminApp() {
       setNotice({ kind: 'ok', text: force ? 'Сделка завершена принудительно и ушла в архив' : 'Сделка завершена и ушла в архив' })
       await loadOrders()
       await loadDeal(selectedId)
+    } catch {
+      setNotice({ kind: 'err', text: 'Нет связи с сервером. Повторите действие.' })
     } finally {
       setBusy(false)
     }
