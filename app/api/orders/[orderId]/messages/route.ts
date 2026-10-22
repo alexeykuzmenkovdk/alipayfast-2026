@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { addMessage, getOrderById, listOrderMessages } from '@/lib/store'
+import { addMessage, getOrderById, listOrderMessages, markOrderMessagesRead } from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
 import { requireTelegramInitData, type TelegramUser } from '@/lib/tma'
 import { notifyAsync, notifyPhotoAsync, adminRoomKeyboard, isBotConfigured } from '@/lib/telegram-bot'
@@ -55,6 +55,8 @@ export async function POST(request: Request, { params }: { params: { orderId: st
   }
 
   const message = await addMessage({ orderId: params.orderId, senderRole: 'client', text: text || undefined, fileUrl })
+  // Клиент писал в чат — значит, ответы оператора он уже видел.
+  void markOrderMessagesRead(params.orderId).catch(() => null)
 
   // Оператор должен узнать о сообщении, даже если админка закрыта.
   const adminId = process.env.ADMIN_USER_ID

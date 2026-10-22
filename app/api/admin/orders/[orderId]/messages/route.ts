@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
-import { addMessage, getOrderById, listOrderMessages } from '@/lib/store'
+import {
+  addMessage,
+  getOrderById,
+  listOrderMessages,
+  markMessageDelivered,
+  markMessageDeliveryFailed,
+} from '@/lib/store'
 import { isDbConfigured } from '@/lib/db'
 import { adminUnauthorizedBody, isAdminRequest } from '@/lib/admin-access'
-import { notifyAsync, notifyPhotoAsync, dealRoomKeyboard } from '@/lib/telegram-bot'
+import { notifyAsync, notifyPhotoAsync, dealRoomKeyboard, type NotifyResult } from '@/lib/telegram-bot'
 
 function isImage(url: string | undefined) {
   return Boolean(url && /\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(url))

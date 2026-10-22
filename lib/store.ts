@@ -53,6 +53,9 @@ export interface OrderMessage {
   text?: string
   fileUrl?: string
   createdAt: string
+  deliveredAt?: string
+  readAt?: string
+  deliveryError?: string
 }
 
 export interface ShowcaseItem {
@@ -181,6 +184,9 @@ function mapMessage(row: Row): OrderMessage {
     text: (row.text as string | null) ?? undefined,
     fileUrl: (row.file_url as string | null) ?? undefined,
     createdAt: asDate(row.created_at),
+    deliveredAt: row.delivered_at ? asDate(row.delivered_at) : undefined,
+    readAt: row.read_at ? asDate(row.read_at) : undefined,
+    deliveryError: (row.delivery_error as string | null) ?? undefined,
   }
 }
 
@@ -360,6 +366,40 @@ export async function addMessage(data: { orderId: string; senderRole: MessageRol
     fileUrl: data.fileUrl,
     createdAt: now,
   }
+}
+
+// Отметки о доставке ответа оператора клиенту: Telegram подтвердил отправку
+// либо вернул ошибку (например, клиент заблокировал бота).
+export async function markMessageDelivered(messageId: string, telegramMessageId: number | null) {
+  await ensureReady()
+  const pool = getPool()
+  await pool.query(
+    'UPDATE order_messages SET telegram_message_id = $2, delivered_at = NOW(), delivery_error = NULL WHERE id = $1',
+    [messageId, telegramMessageId],
+  )
+}
+
+export async function markMessageDeliveryFailed(messageId: string, error: string) {
+  await ensureReady()
+  const pool = getPool()
+  await pool.query('UPDATE order_messages SET delivery_error = $2 WHERE id = $1', [
+    messageId,
+    error.slice(0, 300),
+  ])
+}
+
+// Клиент открыл чат в мини-приложении: все ответы оператора до этого момента
+// считаем прочитанными. Возвращает число новых отметок.
+export async function markOrderMessagesRead(orderId: string) {
+  await ensureReady()
+  const pool = getPool()
+  const result = await pool.query(
+    `UPDATE order_messages SET read_at = NOW()
+     WHERE order_id = $1 AND sender_role = 'admin' AND read_at IS NULL
+     RETURNING id`,
+    [orderId],
+  )
+  return result.rowCount ?? 0
 }
 
 export async function listShowcaseItems() {

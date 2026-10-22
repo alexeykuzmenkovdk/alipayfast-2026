@@ -118,6 +118,12 @@ export async function ensureSchema() {
 
     ALTER TABLE admin_sessions
       ADD COLUMN IF NOT EXISTS sourcing_request_id TEXT;
+
+    ALTER TABLE order_messages
+      ADD COLUMN IF NOT EXISTS telegram_message_id BIGINT,
+      ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE,
+      ADD COLUMN IF NOT EXISTS delivery_error TEXT,
+      ADD COLUMN IF NOT EXISTS read_at TIMESTAMP WITH TIME ZONE;
   `)
 
   globalPool.apfSchemaReady = true

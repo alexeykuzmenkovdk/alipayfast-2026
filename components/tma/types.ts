@@ -42,6 +42,9 @@ export interface OrderMessage {
   text?: string
   fileUrl?: string
   createdAt: string
+  deliveredAt?: string
+  readAt?: string
+  deliveryError?: string
 }
 
 export function isImageUrl(url: string | undefined): boolean {

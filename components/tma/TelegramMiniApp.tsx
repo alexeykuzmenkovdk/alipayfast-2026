@@ -72,6 +72,22 @@ export function TelegramMiniApp() {
   useEffect(() => {
     if (telegramReady && !rates.loading) (window as typeof window & { __tmaReady?: boolean }).__tmaReady = true
   }, [telegramReady, rates.loading])
+
+  const markSeen = useCallback(
+    async (orderId: string) => {
+      if (!orderId || !apiHeaders['x-telegram-init-data']) return
+      try {
+        await fetch(`/api/orders/${orderId}/seen`, {
+          method: 'POST',
+          headers: apiHeaders,
+          signal: AbortSignal.timeout(10_000),
+        })
+      } catch {
+        return
+      }
+    },
+    [apiHeaders],
+  )
   // Курс считаем по тому же ранжиру, что и на сайте: уровни берём из tiers
   // (единый источник — lib/exchange-config), а не своей формулой.
   const rateForCny = useCallback(
@@ -207,6 +223,27 @@ export function TelegramMiniApp() {
   useEffect(() => {
     if (tab !== 'archive') setArchiveRoom(null)
   }, [tab])
+
+  // Клиент видит чат — отмечаем ответы оператора прочитанными.
+  useEffect(() => {
+    if (!telegramReady) return
+    const orderId = tab === 'exchange' ? order?.id : archiveRoom?.order.id
+    if (!orderId) return
+    const ping = () => {
+      if (document.visibilityState === 'visible') void markSeen(orderId)
+    }
+    ping()
+    document.addEventListener('visibilitychange', ping)
+    return () => document.removeEventListener('visibilitychange', ping)
+  }, [
+    telegramReady,
+    tab,
+    order?.id,
+    archiveRoom?.order.id,
+    messages.length,
+    archiveRoom?.messages.length,
+    markSeen,
+  ])
 
   const handleRubChange = (raw: string) => {
     const digits = raw.replace(/[^\d]/g, '')

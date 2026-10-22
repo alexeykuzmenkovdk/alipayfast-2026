@@ -103,37 +103,63 @@ export async function answerCallbackQuery(callbackQueryId: string, text?: string
   })
 }
 
+export interface NotifyResult {
+  ok: boolean
+  description?: string
+  messageId?: number
+}
+
 // Отправка уведомления пользователю. Никогда не бросает исключение:
 // уведомление не должно ломать основной сценарий заявки.
 // Сетевые сбои (прокси/Telegram) повторяем один раз — они обычно короткие.
-export async function notify(userId: number, text: string, replyMarkup?: unknown) {
-  if (!isBotConfigured() || !userId) return
+export async function notify(
+  userId: number,
+  text: string,
+  replyMarkup?: unknown,
+  onResult?: (result: NotifyResult) => void,
+): Promise<NotifyResult> {
+  if (!isBotConfigured() || !userId) {
+    const result: NotifyResult = { ok: false, description: 'bot_not_configured' }
+    onResult?.(result)
+    return result
+  }
+
+  let last: NotifyResult = { ok: false, description: 'unknown' }
 
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
-      const result = await sendMessage({ chat_id: userId, text, reply_markup: replyMarkup })
-      if (result.ok) return
+      const response = await sendMessage({ chat_id: userId, text, reply_markup: replyMarkup })
+      if (response.ok) {
+        const messageId = (response.result as { message_id?: number } | undefined)?.message_id
+        last = { ok: true, messageId }
+        onResult?.(last)
+        return last
+      }
 
-      const reason = String(result.description ?? '')
-      const retryable = /timeout|econn|socket|network|некорректн/i.test(reason)
-      if (!retryable || attempt === 2) {
-        console.error('[TELEGRAM] Уведомление не доставлено:', reason, { userId })
-        return
-      }
+      last = { ok: false, description: String(response.description ?? '') || 'telegram_error' }
+      const retryable = /timeout|econn|socket|network|некорректн/i.test(last.description ?? '')
+      if (!retryable || attempt === 2) break
     } catch (error) {
-      if (attempt === 2) {
-        console.error('[TELEGRAM] Не удалось отправить уведомление:', error, { userId })
-        return
-      }
+      last = { ok: false, description: error instanceof Error ? error.message : 'network_error' }
+      if (attempt === 2) break
     }
     await new Promise((resolve) => setTimeout(resolve, 700))
   }
+
+  console.error('[TELEGRAM] Уведомление не доставлено:', last.description, { userId })
+  onResult?.(last)
+  return last
 }
 
 // То же, но без ожидания: ответ клиенту не должен зависеть от доступности
 // Telegram. Если Telegram тормозит, пользователь этого не почувствует.
-export function notifyAsync(userId: number, text: string, replyMarkup?: unknown) {
-  void notify(userId, text, replyMarkup)
+export function notifyAsync(
+  userId: number,
+  text: string,
+  replyMarkup?: unknown,
+  onResult?: (result: NotifyResult) => void,
+) {
+  void notify(userId, text, replyMarkup, onResult)
 }
 
 // Превращает ссылку на загрузку (/uploads/..) в абсолютную — Telegram sendPhoto
@@ -146,14 +172,36 @@ export function absoluteUploadUrl(url: string) {
 
 // Отправка картинки-вложения в Telegram (с подписью). При сбое тихо откатываемся
 // на обычное текстовое уведомление, чтобы получатель хотя бы узнал о сообщении.
-export function notifyPhotoAsync(userId: number, fileUrl: string, caption: string, replyMarkup?: unknown) {
-  if (!isBotConfigured() || !userId) return
+export function notifyPhotoAsync(
+  userId: number,
+  fileUrl: string,
+  caption: string,
+  replyMarkup?: unknown,
+  onResult?: (result: NotifyResult) => void,
+) {
+  if (!isBotConfigured() || !userId) {
+    onResult?.({ ok: false, description: 'bot_not_configured' })
+    return
+  }
   void (async () => {
     try {
-      await sendPhoto({ chat_id: userId, photo: absoluteUploadUrl(fileUrl), caption, reply_markup: replyMarkup })
+      const response = await sendPhoto({
+        chat_id: userId,
+        photo: absoluteUploadUrl(fileUrl),
+        caption,
+        reply_markup: replyMarkup,
+      })
+      if (response.ok) {
+        const messageId = (response.result as { message_id?: number } | undefined)?.message_id
+        onResult?.({ ok: true, messageId })
+        return
+      }
+      console.error('[TELEGRAM] Фото не отправлено, шлём текст:', response.description)
     } catch (error) {
       console.error('[TELEGRAM] Не удалось отправить фото, шлём текст:', error)
-      await notify(userId, `${caption}\n${absoluteUploadUrl(fileUrl)}`, replyMarkup)
     }
+    const fallback = await notify(userId, `${caption}
+${absoluteUploadUrl(fileUrl)}`, replyMarkup)
+    onResult?.(fallback)
   })()
 }
