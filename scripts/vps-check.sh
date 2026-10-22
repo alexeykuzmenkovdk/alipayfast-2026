@@ -160,7 +160,7 @@ else
       code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' -x "$proxy" https://api.telegram.org/ || true)
       ;;
   esac
-  if [ "$code" = "200" ] || [ "$code" = "404" ]; then
+  if [ -n "$code" ] && [ "$code" != "000" ]; then
     ok "через $proxy Telegram доступен (HTTP $code)"
   else
     bad "через $proxy Telegram недоступен (код ${code:-000}) — проверьте xray/sing-box"
